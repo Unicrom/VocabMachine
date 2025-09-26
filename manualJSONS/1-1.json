@@ -1,0 +1,82 @@
+[
+  {
+    "word": "acquisitive",
+    "part_of_speech": "adjective",
+    "definition": "Able to get and retain ideas or information; concerned with acquiring wealth or property.",
+    "example": "In an acquisitive society, there is a great deal of emphasis on buying and selling.",
+    "synonyms": ["greedy", "grasping", "avaricious", "retentive"],
+    "antonyms": ["altruistic", "unretentive"]
+  },
+  {
+    "word": "arrogate",
+    "part_of_speech": "verb",
+    "definition": "To claim or take without right.",
+    "example": "The ambitious noblemen will put the young king under house arrest and arrogate royal privileges to themselves.",
+    "synonyms": ["expropriate", "usurp", "commandeer"],
+    "antonyms": ["relinquish", "renounce", "abdicate", "abandon"]
+  },
+  {
+    "word": "banal",
+    "part_of_speech": "adjective",
+    "definition": "Hackneyed, trite, commonplace.",
+    "example": "The new play's banal dialogue made it seem more like a soap opera than a serious drama.",
+    "synonyms": ["stale", "insipid"],
+    "antonyms": ["fresh", "novel", "original", "new"]
+  },
+  {
+    "word": "belabor",
+    "part_of_speech": "verb",
+    "definition": "To work on excessively; to thrash soundly.",
+    "example": "His tendency to belabor the small points often made him miss the big picture.",
+    "synonyms": ["overwork"],
+    "antonyms": []
+  },
+  {
+    "word": "carping",
+    "part_of_speech": "adjective / noun",
+    "definition": "Tending to find fault, especially in a petty, nasty, or hairsplitting way; petty, nagging criticism.",
+    "example": "The trainee resigned after a week rather than put up with the carping complaints of the sales manager.",
+    "synonyms": ["nit-picking", "caviling"],
+    "antonyms": ["approving", "uncritical"]
+  },
+  {
+    "word": "coherent",
+    "part_of_speech": "adjective",
+    "definition": "Holding or sticking together; making a logical whole; comprehensible, meaningful.",
+    "example": "The physics teacher gave a surprisingly coherent description of quantum mechanics.",
+    "synonyms": ["connected", "unified", "consistent", "cohesive"],
+    "antonyms": ["muddled", "chaotic", "disjointed"]
+  },
+  {
+    "word": "congeal",
+    "part_of_speech": "verb",
+    "definition": "To change from liquid to solid, thicken; to make inflexible or rigid.",
+    "example": "If you do not wash your dishes right away, the food on them will congeal.",
+    "synonyms": ["harden", "jell", "coagulate", "solidify"],
+    "antonyms": ["melt", "liquefy"]
+  },
+  {
+    "word": "emulate",
+    "part_of_speech": "verb",
+    "definition": "To imitate with the intent of equaling or surpassing the model.",
+    "example": "Most beginning writers try to emulate a great writer and later develop their own individual styles.",
+    "synonyms": ["copy", "mimic", "rival", "match", "measure up to"],
+    "antonyms": []
+  },
+  {
+    "word": "encomium",
+    "part_of_speech": "noun",
+    "definition": "A formal expression of praise, a lavish tribute.",
+    "example": "On Veterans Day, the President delivered a heartfelt encomium to those who died for their country.",
+    "synonyms": ["panegyric", "eulogy", "commendation"],
+    "antonyms": ["condemnation", "castigation", "criticism"]
+  },
+  {
+    "word": "eschew",
+    "part_of_speech": "verb",
+    "definition": "To avoid, shun, keep away from.",
+    "example": "The young athletes promised the coach that they would train vigorously and eschew bad habits.",
+    "synonyms": ["abstain from", "steer clear of", "forgo"],
+    "antonyms": []
+  }
+]

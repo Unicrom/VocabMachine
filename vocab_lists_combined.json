@@ -1,0 +1,710 @@
+{
+  "version": 1,
+  "lists": [
+    {
+      "name": "1-1",
+      "words": [
+        {
+          "word": "acquisitive",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "arrogate",
+          "definition": "to claim or take without right The ambitious noblemen will put the young king under royal",
+          "example": "",
+          "synonyms": [
+            "greedy",
+            "grasping",
+            "avaricious",
+            "retentive"
+          ],
+          "antonyms": [
+            "altruistic",
+            "unretentive"
+          ]
+        },
+        {
+          "word": "banal",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "belabor",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "carping",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "coherent",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "congeal",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "emulate",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "encomium",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "eschew",
+          "definition": "tending to find fault, especially in a petty, nasty, or hairsplitting way; (n.) petty, nagging criticism The trainee resigned after a week rather than put up with complaints of the sales bad habits.",
+          "example": "",
+          "synonyms": [
+            "overwork"
+          ],
+          "antonyms": [
+            "fresh",
+            "novel",
+            "original",
+            "new"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "1-2",
+      "words": [
+        {
+          "word": "germane",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "insatiable",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "intransigent",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "invidious",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "largesse",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "reconnaissance",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "substantiate",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "taciturn",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "temporize",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "tenable",
+          "definition": "capable of being held or defended The researchers put forth a theory, but their conclusions would be reviewed carefully by others.",
+          "example": "",
+          "synonyms": [
+            "defensible",
+            "justifiable",
+            "maintainable"
+          ],
+          "antonyms": [
+            "indefensible",
+            "unjustifiable"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2-1",
+      "words": [
+        {
+          "word": "accost",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "animadversion",
+          "definition": "a comment indicating strong criticism or disapproval The inexperienced filmmaker was disheartened by the of the film critic.",
+          "example": "",
+          "synonyms": [
+            "buttonhole",
+            "approach",
+            "confront"
+          ],
+          "antonyms": [
+            "evade",
+            "avoid",
+            "shun"
+          ]
+        },
+        {
+          "word": "avid",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "brackish",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "celerity",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "devious",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "gambit",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "halcyon",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "histrionic",
+          "definition": "",
+          "example": "",
+          "synonyms": [
+            "affected",
+            "stagy"
+          ],
+          "antonyms": []
+        },
+        {
+          "word": "incendiary",
+          "definition": "deliberately setting or causing fires; designed to start fires; tending to stir up strife or rebellion; (n.) one who deliberately sets fires, arsonist; one who causes strife",
+          "example": "",
+          "synonyms": [
+            "inflammatory",
+            "provocative",
+            "firebrand"
+          ],
+          "antonyms": [
+            "soothing",
+            "quieting",
+            "peacemaker"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2-2",
+      "words": [
+        {
+          "word": "maelstrom",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "myopic",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "overt",
+          "definition": "open, not hidden, expressed or revealed in a way that is easily recognized In order for Congress to declare war, the President must threat",
+          "example": "",
+          "synonyms": [
+            "shortsighted"
+          ],
+          "antonyms": [
+            "farsighted"
+          ]
+        },
+        {
+          "word": "pejorative",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "propriety",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "sacrilege",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "summarily",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "suppliant",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "talisman",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "undulate",
+          "definition": "to move in waves or with a wavelike motion; to have a wavelike appearance or form The baseball fans began to as they cheered, so that they appeared to move in a wave.",
+          "example": "",
+          "synonyms": [
+            "ripple",
+            "fluctuate",
+            "rise and fall"
+          ],
+          "antonyms": [
+            "unseemliness",
+            "inappropriateness"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3-1",
+      "words": [
+        {
+          "word": "articulate",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "cavort",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "credence",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "decry",
+          "definition": "",
+          "example": "",
+          "synonyms": [
+            "denounce",
+            "censure",
+            "devalue"
+          ],
+          "antonyms": []
+        },
+        {
+          "word": "dissemble",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "distraught",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "eulogy",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "evince",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "exhume",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "feckless",
+          "definition": "lacking in spirit and strength; ineffective, weak; irresponsible, unreliable Although a eventually matured into a hard-working and responsible citizen.",
+          "example": "",
+          "synonyms": [
+            "feeble",
+            "helpless",
+            "Incompetent",
+            "Ineffectual"
+          ],
+          "antonyms": [
+            "competent",
+            "capable",
+            "effective"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3-2",
+      "words": [
+        {
+          "word": "murky",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "nefarious",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "piquant",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "primordial",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "propinquity",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "unwonted",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "utopian",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "verbiage",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "verdant",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "viscous",
+          "definition": "having a gelatinous or gluey quality, lacking in easy movement or fluidity The varnish left a on the wood that was hard to remove.",
+          "example": "",
+          "synonyms": [
+            "gummy",
+            "sticky",
+            "thick"
+          ],
+          "antonyms": [
+            "scorched",
+            "sere",
+            "barren",
+            "arid"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4-1",
+      "words": [
+        {
+          "word": "atrophy",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "bastion",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "concord",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "consummate",
+          "definition": "complete or perfect in the highest degree; (v.) to bring to a state of completion or perfection Michelangelo's paintings on the ceiling of the Sistine Chapel artistry.",
+          "example": "",
+          "synonyms": [
+            "citadel",
+            "rampart",
+            "bulwark",
+            "parapet"
+          ],
+          "antonyms": [
+            "disagreement",
+            "strife",
+            "discord"
+          ]
+        },
+        {
+          "word": "disarray",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "exlgency",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "flotsam",
+          "definition": "floating debris; homeless, impoverished people After the two ships collided, the survivors clung to various and hoped for rescue.",
+          "example": "",
+          "synonyms": [
+            "requirement",
+            "crisis"
+          ],
+          "antonyms": [
+            "organization",
+            "order",
+            "tidiness"
+          ]
+        },
+        {
+          "word": "frenetic",
+          "definition": "",
+          "example": "",
+          "synonyms": [
+            "frantic",
+            "overwrought"
+          ],
+          "antonyms": []
+        },
+        {
+          "word": "glean",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "grouse",
+          "definition": "to gather bit by bit; to gather small quantities of grain left in a field by the reapers By means of painstaking investigation, the detectives will the truth. The patient's latest",
+          "example": "",
+          "synonyms": [
+            "floating wreckage"
+          ],
+          "antonyms": [
+            "calm",
+            "controlled",
+            "relaxed",
+            "leisurely"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4-2",
+      "words": [
+        {
+          "word": "incarcerate",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "incumbent",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "jocular",
+          "definition": "humorous, jesting, jolly, joking After receiving the news that she was ahead in the polls, the mood.",
+          "example": "",
+          "synonyms": [
+            "mandatory",
+            "necessary"
+          ],
+          "antonyms": [
+            "optional",
+            "unnecessary"
+          ]
+        },
+        {
+          "word": "ludicrous",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "mordant",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "pusillanimous",
+          "definition": "",
+          "example": "",
+          "synonyms": [
+            "craven",
+            "lily-livered"
+          ],
+          "antonyms": []
+        },
+        {
+          "word": "recumbent",
+          "definition": "",
+          "example": "",
+          "synonyms": [],
+          "antonyms": []
+        },
+        {
+          "word": "stratagem",
+          "definition": "a scheme to outwit or deceive an opponent or to gain an end The defense attorney used a clever to curry sympathy for her client.",
+          "example": "",
+          "synonyms": [
+            "prone",
+            "prostrate",
+            "supine",
+            "inactive"
+          ],
+          "antonyms": [
+            "erect",
+            "upright",
+            "energetic",
+            "dynamic"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vocab Machine 2001</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <h1>Vocab Machine 2001</h1>
+      <nav class="tabs" role="tablist" aria-label="Primary">
+        <button class="tab active" data-tab="lists" role="tab" aria-selected="true">Lists</button>
+        <button class="tab" data-tab="study" role="tab" aria-selected="false">Study</button>
+        <button class="tab" data-tab="export" role="tab" aria-selected="false">Import/Export</button>
+      </nav>
+    </header>
+
+    <main>
+      <!-- Lists Panel -->
+      <section id="panel-lists" class="panel active" role="tabpanel" aria-labelledby="Lists">
+        <div class="panel-header">
+          <h2>Your Lists</h2>
+          <div class="actions">
+            <button id="btn-new-list" class="primary">New List</button>
+            <button id="btn-duplicate-list">Duplicate</button>
+            <button id="btn-delete-list" class="danger">Delete</button>
+          </div>
+        </div>
+        <div class="lists-layout">
+          <aside class="list-sidebar">
+            <input id="list-search" type="search" placeholder="Search lists…" />
+            <ul id="lists" class="lists"></ul>
+          </aside>
+          <section class="list-editor">
+            <div class="list-meta">
+              <label>
+                List name
+                <input id="list-name" type="text" placeholder="e.g., GRE Set 1" />
+              </label>
+              <div class="meta-actions">
+                <button id="btn-save-list" class="primary">Save</button>
+                <button id="btn-clear-words">Clear Words</button>
+                <button id="btn-load-sample" title="Load a tiny sample list">Load Sample</button>
+              </div>
+            </div>
+
+            <div class="word-form">
+              <h3>Add / Edit Word</h3>
+              <div class="grid-2">
+                <label>
+                  Word
+                  <input id="word-input" type="text" />
+                </label>
+                <label>
+                  Example sentence (optional)
+                  <input id="example-input" type="text" />
+                </label>
+              </div>
+              <label>
+                Definition
+                <textarea id="definition-input" rows="2"></textarea>
+              </label>
+              <div class="grid-2">
+                <label>
+                  Synonyms (comma-separated)
+                  <input id="synonyms-input" type="text" />
+                </label>
+                <label>
+                  Antonyms (comma-separated)
+                  <input id="antonyms-input" type="text" />
+                </label>
+              </div>
+              <div class="form-actions">
+                <button id="btn-add-word" class="primary">Add/Update Word</button>
+                <button id="btn-reset-word">Reset</button>
+              </div>
+            </div>
+
+            <div class="words-table">
+              <div class="table-actions">
+                <input id="word-search" type="search" placeholder="Filter words…" />
+                <button id="btn-export-current" title="Export this list as JSON">Export List</button>
+              </div>
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width: 18rem;">Word</th>
+                    <th>Definition</th>
+                    <th>Synonyms</th>
+                    <th>Antonyms</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="words-tbody"></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <!-- Study Panel -->
+      <section id="panel-study" class="panel" role="tabpanel" aria-labelledby="Study">
+        <div class="panel-header">
+          <h2>Study</h2>
+        </div>
+        <div class="study-setup">
+          <!-- 1) Choose lists (horizontal scroll chips) -->
+          <div class="setup-block">
+            <div class="list-chips" id="study-list-chips" aria-label="Select lists to study" role="list"></div>
+          </div>
+
+          <!-- 2) Content type tabs -->
+          <div class="setup-block">
+            <div class="content-tabs" role="tablist" aria-label="Content Type">
+              <button class="content-tab active" data-content="spelling" role="tab" aria-selected="true">Spelling</button>
+              <button class="content-tab" data-content="definition" role="tab" aria-selected="false">Definition</button>
+              <button class="content-tab" data-content="synonym" role="tab" aria-selected="false">Synonym</button>
+              <button class="content-tab" data-content="antonym" role="tab" aria-selected="false">Antonym</button>
+            </div>
+          </div>
+
+          <!-- 3) Basic controls -->
+          <div class="setup-block">
+            <div class="right-align">
+              <button id="btn-start-study" class="primary">Start Session</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Floating Settings Button & Panel -->
+        <button id="btn-settings" class="floating-settings" title="Study settings">⚙️</button>
+        <div id="settings-panel" class="settings-panel hidden" role="dialog" aria-modal="false" aria-label="Study settings">
+          <div class="settings-row">
+            <button id="direction-label" class="toggle">Match <span>answer</span> to Word</button>
+          </div>
+          <div class="settings-row">
+            <label for="session-mode">Mode</label>
+            <select id="session-mode">
+              <option value="normal" selected>Normal</option>
+              <option value="learning">Learning</option>
+              <option value="test">Test</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <label for="syn-ant-prompt">Syn/Ant prompt</label>
+            <select id="syn-ant-prompt">
+              <option value="random" selected>Random one</option>
+              <option value="all">Show all</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="session" class="session hidden" aria-live="polite">
+          <div class="session-header">
+            <div class="progress"><span id="progress-text">0 / 0</span></div>
+            <div class="session-actions">
+              <button id="btn-end-session" class="danger">End</button>
+            </div>
+          </div>
+          <div id="prompt" class="prompt"></div>
+
+          <form id="answer-form" class="answer-area" autocomplete="off">
+            <div id="answer-input-area" class="answer-input-area"></div>
+            <div class="answer-actions">
+              <button type="submit" class="primary">Submit</button>
+              <button type="button" id="btn-show-answer">Show Answer</button>
+            </div>
+          </form>
+
+          <div id="feedback" class="feedback" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <!-- Import/Export Panel -->
+      <section id="panel-export" class="panel" role="tabpanel" aria-labelledby="Import/Export">
+        <div class="panel-header">
+          <h2>Import / Export</h2>
+        </div>
+        <div class="import-export">
+          <div class="export-block">
+            <h3>Export all lists</h3>
+            <button id="btn-export-all" class="primary">Download JSON</button>
+          </div>
+
+          <div class="import-block">
+            <h3>Import JSON</h3>
+            <input id="import-file" type="file" accept="application/json" />
+            <button id="btn-import" disabled>Import</button>
+          </div>
+
+          <div class="import-block">
+            <h3>Import from OCR text files</h3>
+            <p class="note">Select one or more .txt files (named like 1-1.txt). Each file becomes a list. We’ll parse definitions, examples, synonyms, and antonyms.</p>
+            <input id="import-ocr" type="file" accept=".txt,.tzt" multiple />
+            <button id="btn-import-ocr" disabled>Import Text Lists</button>
+          </div>
+
+          <p class="note">Data is stored locally in your browser (localStorage). No account required.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <small>Made for personal study • Data stays on this device</small>
+    </footer>
+
+    <script type="module" src="src/main.js"></script>
+  </body>
+  </html>

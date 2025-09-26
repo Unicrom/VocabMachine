@@ -1,0 +1,82 @@
+[
+  {
+    "word": "accost",
+    "part_of_speech": "verb",
+    "definition": "To approach and speak to first; to confront in a challenging or aggressive way.",
+    "example": "The nobleman was accosted by beggars on his way to the castle.",
+    "synonyms": ["buttonhole", "approach", "confront"],
+    "antonyms": ["evade", "avoid", "shun"]
+  },
+  {
+    "word": "animadversion",
+    "part_of_speech": "noun",
+    "definition": "A comment indicating strong criticism or disapproval.",
+    "example": "The inexperienced filmmaker was disheartened by the animadversion of the film critic.",
+    "synonyms": ["rebuke", "reproof"],
+    "antonyms": ["praise", "compliment"]
+  },
+  {
+    "word": "avid",
+    "part_of_speech": "adjective",
+    "definition": "Desirous of something to the point of greed; intensely eager.",
+    "example": "Most writers are also avid readers who have loved books since childhood.",
+    "synonyms": ["keen", "enthusiastic", "grasping"],
+    "antonyms": ["reluctant", "indifferent", "unenthusiastic"]
+  },
+  {
+    "word": "brackish",
+    "part_of_speech": "adjective",
+    "definition": "Having a salty taste and unpleasant to drink.",
+    "example": "The shipwrecked passengers adrift on the lifeboat became ill after drinking brackish water.",
+    "synonyms": ["briny", "saline"],
+    "antonyms": ["fresh", "clear", "sweet"]
+  },
+  {
+    "word": "celerity",
+    "part_of_speech": "noun",
+    "definition": "Swiftness, rapidity of motion or action.",
+    "example": "Although the heavy snowfall was not expected, the highway department responded with surprising celerity.",
+    "synonyms": ["promptness", "alacrity", "speed"],
+    "antonyms": ["slowness", "sluggishness", "dilatoriness"]
+  },
+  {
+    "word": "devious",
+    "part_of_speech": "adjective",
+    "definition": "Straying or wandering from a straight or direct course; done or acting in a shifty or underhanded way.",
+    "example": "The interrogator used devious methods to try to get the suspect to incriminate himself.",
+    "synonyms": ["roundabout", "indirect", "tricky", "sly", "artful"],
+    "antonyms": ["direct", "straightforward", "open", "aboveboard"]
+  },
+  {
+    "word": "gambit",
+    "part_of_speech": "noun",
+    "definition": "In chess, an opening move that involves risk or sacrifice of a minor piece in order to gain a later advantage; any opening move of this type.",
+    "example": "Asking an interesting stranger about his or her job is a popular party gambit.",
+    "synonyms": ["ploy", "stratagem", "ruse", "maneuver"],
+    "antonyms": []
+  },
+  {
+    "word": "halcyon",
+    "part_of_speech": "noun / adjective",
+    "definition": "A legendary bird identified with the kingfisher; calm, peaceful; happy, golden; prosperous, affluent.",
+    "example": "The woman often spoke of the halcyon days of her childhood.",
+    "synonyms": ["tranquil", "serene", "placid", "palmy"],
+    "antonyms": ["turbulent", "chaotic", "tumultuous"]
+  },
+  {
+    "word": "histrionic",
+    "part_of_speech": "adjective",
+    "definition": "Pertaining to actors and their techniques; theatrical, artificial; melodramatic.",
+    "example": "Upon receiving his award, the young actor gave a histrionic speech.",
+    "synonyms": ["affected", "stagy"],
+    "antonyms": ["low-keyed", "muted", "untheatrical", "subdued"]
+  },
+  {
+    "word": "incendiary",
+    "part_of_speech": "adjective / noun",
+    "definition": "Deliberately setting or causing fires; designed to start fires; tending to stir up strife or rebellion; one who deliberately sets fires or causes strife.",
+    "example": "The protest turned violent after incendiary speeches were delivered to the crowd.",
+    "synonyms": ["inflammatory", "provocative", "firebrand"],
+    "antonyms": ["soothing", "quieting", "peacemaker"]
+  }
+]
