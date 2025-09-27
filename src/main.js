@@ -1,5 +1,4 @@
 import { Storage } from './storage.js';
-import { sampleData } from './sample.js';
 import { StudyEngine } from './study.js';
 
 // State
@@ -22,6 +21,8 @@ function init() {
   wireStudyPanel();
   wireImportExport();
   load();
+  // Merge built-in default lists (non-destructive) asynchronously
+  loadBuiltInLists('merge');
   render();
 }
 
@@ -30,14 +31,23 @@ function cacheEls() {
   els.panels = $all('.panel');
   // Lists panel
   els.listSearch = $('#list-search');
-  els.listsUl = $('#lists');
+  els.listCards = $('#list-cards');
+  els.listsOverview = $('#lists-overview');
+  els.listDetail = $('#list-detail');
+  els.detailTitle = $('#detail-title');
+  // detail-count removed
+  els.btnBackLists = $('#btn-back-lists');
+  els.btnNewWord = $('#btn-new-word');
+  // Modal elements
+  els.wordModal = $('#word-modal');
+  els.wordFormEl = $('#word-form');
+  els.btnCloseWordModal = $('#btn-close-word-modal');
+  els.btnDeleteWord = $('#btn-delete-word');
   els.btnNewList = $('#btn-new-list');
   els.btnDuplicateList = $('#btn-duplicate-list');
   els.btnDeleteList = $('#btn-delete-list');
-  els.listName = $('#list-name');
-  els.btnSaveList = $('#btn-save-list');
-  els.btnClearWords = $('#btn-clear-words');
-  els.btnLoadSample = $('#btn-load-sample');
+  // list-name input & save button removed (inline title editing now)
+  // Removed clear words & load sample buttons
   els.wordInputs = {
     word: $('#word-input'),
     example: $('#example-input'),
@@ -78,6 +88,17 @@ function cacheEls() {
   els.btnImport = $('#btn-import');
   els.importOcr = $('#import-ocr');
   els.btnImportOcr = $('#btn-import-ocr');
+  els.btnBuiltinsMerge = $('#btn-builtins-merge');
+  els.btnBuiltinsOverwrite = $('#btn-builtins-overwrite');
+  // Generic dialog
+  els.appDialog = $('#app-dialog');
+  els.appDialogTitle = $('#app-dialog-title');
+  els.appDialogBody = $('#app-dialog-body');
+  els.appDialogForm = $('#app-dialog-form');
+  els.appDialogInputWrap = $('#app-dialog-input-wrap');
+  els.appDialogInput = $('#app-dialog-input');
+  els.appDialogButtons = $('#app-dialog-buttons');
+  els.appDialogClose = $('#app-dialog-close');
 }
 
 function wireTabs() {
@@ -93,14 +114,14 @@ function wireTabs() {
 }
 
 function wireListPanel() {
-  els.btnNewList.addEventListener('click', () => {
-    const name = prompt('New list name:');
+  els.btnNewList.addEventListener('click', async () => {
+    const name = await appPrompt('New list', 'Enter a name for the new list:');
     if (!name) return;
     const id = crypto.randomUUID();
     state.lists.push({ id, name, words: [], stats: {} });
     state.activeListId = id;
     save();
-    render();
+    openListDetail(id);
   });
 
   els.btnDuplicateList.addEventListener('click', () => {
@@ -113,67 +134,54 @@ function wireListPanel() {
     state.lists.push(clone);
     state.activeListId = id;
     save();
-    render();
+    openListDetail(id);
   });
 
-  els.btnDeleteList.addEventListener('click', () => {
+  els.btnDeleteList.addEventListener('click', async () => {
     const list = activeList();
     if (!list) return;
-    if (!confirm(`Delete list "${list.name}"?`)) return;
+    const ok = await appConfirm('Delete List', `Delete list "${escapeHtml(list.name)}"? This cannot be undone.`);
+    if (!ok) return;
     state.lists = state.lists.filter(l => l.id !== list.id);
-    if (state.activeListId === list.id) state.activeListId = state.lists[0]?.id || null;
+  if (state.activeListId === list.id) state.activeListId = (state.lists[0] ? state.lists[0].id : null);
     save();
-    render();
-  });
-
-  els.btnSaveList.addEventListener('click', () => {
-    const list = activeList();
-    if (!list) return;
-    list.name = els.listName.value.trim() || list.name;
-    save();
+    // After delete go back to overview
+    showOverview();
     renderLists();
     renderStudyListChips();
   });
 
-  els.btnClearWords.addEventListener('click', () => {
-    const list = activeList();
-    if (!list) return;
-    if (!confirm('Remove all words from this list?')) return;
-    list.words = [];
-    save();
-    renderWords();
-  });
+  // Inline title rename: click list title (h2) to rename
+  if (els.detailTitle) {
+    const commit = () => {
+      const list = activeList();
+      if (!list) return;
+      const v = els.detailTitle.value.trim();
+      if (!v) return; // keep old if empty
+      if (v !== list.name) {
+        list.name = v;
+        save();
+        renderLists();
+        renderStudyListChips();
+      }
+    };
+    els.detailTitle.addEventListener('blur', commit);
+    els.detailTitle.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); els.detailTitle.blur(); } });
+  }
 
-  els.btnLoadSample.addEventListener('click', () => {
-    const list = activeList();
-    if (!list) return;
-    list.words = sampleData();
-    save();
-    renderWords();
-  });
-
-  els.btnAddWord.addEventListener('click', () => {
-    const list = activeList(); if (!list) return;
-    const w = collectWordFromForm();
-    if (!w.word || !w.definition) {
-      alert('Word and definition are required.');
-      return;
-    }
-    const idx = list.words.findIndex(x => x.word.toLowerCase() === w.word.toLowerCase());
-    if (idx >= 0) list.words[idx] = w; else list.words.push(w);
-    save();
-    renderWords();
-    clearWordForm();
-  });
-
-  els.btnResetWord.addEventListener('click', clearWordForm);
-
+  // Inline add/reset removed in favor of modal form
   els.wordSearch.addEventListener('input', renderWords);
   els.listSearch.addEventListener('input', renderLists);
   els.btnExportCurrent.addEventListener('click', () => {
     const list = activeList(); if (!list) return;
     downloadJSON(`${list.name}.json`, list);
   });
+  els.btnBackLists.addEventListener('click', showOverview);
+  if (els.btnNewWord) els.btnNewWord.addEventListener('click', () => openWordModal());
+  if (els.btnCloseWordModal) els.btnCloseWordModal.addEventListener('click', closeWordModal);
+  if (els.wordFormEl) els.wordFormEl.addEventListener('submit', (e) => { e.preventDefault(); saveWordFromModal(); });
+  if (els.btnResetWord) els.btnResetWord.addEventListener('click', clearWordForm);
+  if (els.btnDeleteWord) els.btnDeleteWord.addEventListener('click', deleteCurrentModalWord);
 }
 
 function wireStudyPanel() {
@@ -237,10 +245,10 @@ function wireImportExport() {
     downloadJSON('vocab_machine_export.json', { version: 1, lists: state.lists });
   });
   els.importFile.addEventListener('change', () => {
-    els.btnImport.disabled = !els.importFile.files?.length;
+  els.btnImport.disabled = !(els.importFile.files && els.importFile.files.length);
   });
   els.btnImport.addEventListener('click', async () => {
-    const file = els.importFile.files?.[0]; if (!file) return;
+  const file = (els.importFile.files && els.importFile.files[0]); if (!file) return;
     const text = await file.text();
     try {
       const data = JSON.parse(text);
@@ -248,7 +256,7 @@ function wireImportExport() {
       // Merge by list name; add if new
       data.lists.forEach(importList => {
         const existing = state.lists.find(l => l.name === importList.name);
-        const clone = { ...importList, id: existing?.id || crypto.randomUUID() };
+  const clone = { ...importList, id: (existing ? existing.id : crypto.randomUUID()) };
         if (existing) Object.assign(existing, clone);
         else state.lists.push(clone);
       });
@@ -262,7 +270,7 @@ function wireImportExport() {
 
   // OCR text import
   els.importOcr.addEventListener('change', () => {
-    els.btnImportOcr.disabled = !els.importOcr.files?.length;
+  els.btnImportOcr.disabled = !(els.importOcr.files && els.importOcr.files.length);
   });
   els.btnImportOcr.addEventListener('click', async () => {
     const files = Array.from(els.importOcr.files || []);
@@ -289,19 +297,23 @@ function wireImportExport() {
     render();
     alert('Text lists imported.');
   });
+
+  // Built-in lists re-import
+  if (els.btnBuiltinsMerge) els.btnBuiltinsMerge.addEventListener('click', async () => {
+    await loadBuiltInLists('merge', true);
+    alert('Built-in lists merged (missing lists added).');
+  });
+  if (els.btnBuiltinsOverwrite) els.btnBuiltinsOverwrite.addEventListener('click', async () => {
+    const ok = await appConfirm('Overwrite Built-ins', 'Overwrite built-in lists? This resets their words & stats. Continue?');
+    if (!ok) return;
+    await loadBuiltInLists('overwrite', true);
+    alert('Built-in lists overwritten.');
+  });
 }
 
 function load() {
   state.lists = Storage.loadLists();
-  if (!state.lists.length) {
-    // create initial list
-    const id = crypto.randomUUID();
-    state.lists.push({ id, name: 'My First List', words: [], stats: {} });
-    state.activeListId = id;
-    save();
-  } else {
-    state.activeListId = Storage.loadActiveListId() || state.lists[0]?.id || null;
-  }
+  state.activeListId = Storage.loadActiveListId() || (state.lists[0] ? state.lists[0].id : null);
 }
 
 function save() {
@@ -309,39 +321,205 @@ function save() {
   Storage.saveActiveListId(state.activeListId);
 }
 
+async function loadBuiltInLists(mode = 'merge', manual = false) {
+  try {
+    const resp = await fetch('default_vocab_lists.json', { cache: 'no-store' });
+    if (!resp.ok) return; // silent fail
+    const data = await resp.json();
+    if (!data || !Array.isArray(data.lists)) return;
+    const nameMap = new Map(state.lists.map(l => [l.name, l]));
+    let changed = 0;
+    for (const src of data.lists) {
+      const existing = nameMap.get(src.name);
+      if (!existing) {
+        state.lists.push({ id: crypto.randomUUID(), name: src.name, words: src.words || [], stats: {} });
+        changed++;
+      } else if (mode === 'overwrite') {
+        existing.words = src.words || [];
+        existing.stats = {};
+        changed++;
+      }
+    }
+    if (changed) {
+      if (!state.lists.find(l => l.id === state.activeListId)) {
+  state.activeListId = (state.lists[0] ? state.lists[0].id : null);
+      }
+      save();
+      renderLists();
+      renderStudyListChips();
+    }
+  } catch (e) {
+    console.warn('Failed to load built-in lists', e);
+  if (manual) alert('Failed to load built-in lists: ' + (e && e.message ? e.message : e));
+  }
+}
+
 function render() {
   renderLists();
-  renderListEditor();
-  renderWords();
+  if (!els.listDetail.classList.contains('hidden')) {
+    renderListEditor();
+    renderWords();
+  }
   renderStudyListChips();
 }
 
 function renderLists() {
-  const filter = els.listSearch.value?.toLowerCase() || '';
-  els.listsUl.innerHTML = '';
+  const filter = (els.listSearch.value || '').toLowerCase();
+  els.listCards.innerHTML = '';
   state.lists
-    .filter(l => l.name.toLowerCase().includes(filter))
+    .filter(l => {
+      if (l.name.toLowerCase().includes(filter)) return true;
+      if (!filter) return true;
+      // search words and definitions
+      return l.words.some(w => w.word.toLowerCase().includes(filter) || (w.definition && w.definition.toLowerCase().includes(filter)));
+    })
     .forEach(list => {
-      const li = document.createElement('li');
-      li.className = list.id === state.activeListId ? 'active' : '';
-      li.innerHTML = `<div><strong>${escapeHtml(list.name)}</strong><br/><small>${list.words.length} words</small></div><div></div>`;
-      li.addEventListener('click', () => {
-        state.activeListId = list.id;
-        save();
-        render();
+      const card = document.createElement('div');
+      card.className = 'list-card';
+      card.tabIndex = 0;
+      card.innerHTML = `
+        <div class="list-card-head">
+          <h3>${escapeHtml(list.name)}</h3>
+          <div class="menu-wrap">
+            <button class="icon-btn small menu-btn" aria-label="List actions" title="List actions"><svg class="icon" aria-hidden="true"><use href="#icon-menu"/></svg></button>
+            <div class="menu hidden" role="menu">
+              <button data-act="open" role="menuitem">Open</button>
+              <button data-act="duplicate" role="menuitem">Duplicate</button>
+              <button data-act="export" role="menuitem">Export</button>
+              <button data-act="delete" class="danger" role="menuitem">Delete</button>
+            </div>
+          </div>
+        </div>
+        <div class="list-card-meta">${list.words.length} words</div>
+        <div class="list-card-words">${previewWords(list.words)}</div>
+      `;
+      // open on click anywhere (except menu btn)
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.menu-wrap')) return; // menu button or menu itself
+        // If any menu is open, just close menus and do NOT navigate
+        const openMenu = document.querySelector('.list-card .menu:not(.hidden)');
+        if (openMenu) { closeOtherMenus(null); return; }
+        openListDetail(list.id);
       });
-      els.listsUl.appendChild(li);
+      card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openListDetail(list.id); } });
+      // menu logic
+      const menuBtn = card.querySelector('.menu-btn');
+      const menu = card.querySelector('.menu');
+      menuBtn.setAttribute('aria-expanded','false');
+      menuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = !menu.classList.contains('hidden');
+        // Close all first
+        closeOtherMenus(null);
+        if (!isOpen) {
+          menu.classList.remove('hidden');
+          menuBtn.setAttribute('aria-expanded','true');
+          // Focus first item for accessibility
+          const first = menu.querySelector('button');
+          setTimeout(() => { if (first) first.focus(); }, 0);
+        } else {
+          menu.classList.add('hidden');
+          menuBtn.setAttribute('aria-expanded','false');
+        }
+      });
+      menu.addEventListener('click', (e) => { e.stopPropagation(); });
+      menu.addEventListener('focusout', (e) => {
+        // Close if focus leaves the menu and not moving to another element inside it
+        if (!menu.contains(e.relatedTarget)) closeOtherMenus(null);
+      });
+      menu.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => handleCardMenu(list, btn.dataset.act));
+      });
+      els.listCards.appendChild(card);
     });
+  document.addEventListener('click', () => closeOtherMenus(null), { once: true });
+}
+
+function previewWords(words) {
+  if (!words.length) return '<em class="muted">(empty)</em>';
+  return words.map(w => `<div class="word-line">${escapeHtml(w.word)}</div>`).join('');
+}
+
+function closeOtherMenus(current) {
+  document.querySelectorAll('.list-card .menu').forEach(m => {
+    if (m !== current) {
+      if (!m.classList.contains('hidden')) m.classList.add('hidden');
+    }
+  });
+  document.querySelectorAll('.list-card .menu-btn').forEach(btn => btn.setAttribute('aria-expanded','false'));
+  if (current) {
+  const btn = current && current.parentElement ? current.parentElement.querySelector('.menu-btn') : null;
+    if (btn) btn.setAttribute('aria-expanded','true');
+  }
+}
+
+// Global handlers for closing list action menus
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.menu-wrap')) closeOtherMenus(null);
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeOtherMenus(null); });
+
+function handleCardMenu(list, act) {
+  switch (act) {
+    case 'open':
+      closeOtherMenus(null); openListDetail(list.id); break;
+    case 'duplicate':
+      const id = crypto.randomUUID();
+      const clone = JSON.parse(JSON.stringify(list));
+      clone.id = id;
+      clone.name = `${clone.name} (copy)`;
+      state.lists.push(clone);
+      state.activeListId = id; save(); renderLists(); closeOtherMenus(null); break;
+    case 'export':
+      downloadJSON(`${list.name}.json`, list); closeOtherMenus(null); break;
+    case 'delete':
+      appConfirm('Delete List', `Delete list "${escapeHtml(list.name)}"? This cannot be undone.`).then(ok => {
+        if (!ok) { closeOtherMenus(null); return; }
+        state.lists = state.lists.filter(l => l.id !== list.id);
+  if (state.activeListId === list.id) state.activeListId = (state.lists[0] ? state.lists[0].id : null);
+        save(); renderLists(); renderStudyListChips();
+        closeOtherMenus(null);
+      });
+      break;
+  }
+}
+
+function openListDetail(id) {
+  state.activeListId = id;
+  save();
+  els.listsOverview.classList.add('hidden');
+  els.listDetail.classList.remove('hidden');
+  renderListEditor();
+  renderWords();
+  updateDetailHeader();
+}
+
+function updateDetailHeader() {
+  const list = activeList();
+  if (els.detailTitle) {
+    const val = (list ? list.name : '');
+    if (els.detailTitle.tagName === 'INPUT') {
+      els.detailTitle.value = val;
+    } else {
+      els.detailTitle.textContent = val || 'List';
+    }
+  }
+}
+
+function showOverview() {
+  els.listDetail.classList.add('hidden');
+  els.listsOverview.classList.remove('hidden');
+  renderLists();
 }
 
 function renderListEditor() {
-  const list = activeList();
-  els.listName.value = list?.name || '';
+  // list-name input removed; nothing needed here now
 }
 
 function renderWords() {
   const list = activeList();
-  const filter = els.wordSearch.value?.toLowerCase() || '';
+  if (!els.wordsTbody) return;
+  const filter = (els.wordSearch && els.wordSearch.value ? els.wordSearch.value : '').toLowerCase();
   els.wordsTbody.innerHTML = '';
   if (!list) return;
   list.words
@@ -351,24 +529,13 @@ function renderWords() {
       tr.innerHTML = `
         <td><strong>${escapeHtml(w.word)}</strong><br/><small>${escapeHtml(w.example || '')}</small></td>
         <td>${escapeHtml(w.definition)}</td>
-        <td>${escapeHtml(w.synonyms?.join(', ') || '')}</td>
-        <td>${escapeHtml(w.antonyms?.join(', ') || '')}</td>
-        <td>
-          <button data-act="edit">Edit</button>
-          <button data-act="remove" class="danger">Remove</button>
-        </td>
+  <td>${escapeHtml(Array.isArray(w.synonyms) ? w.synonyms.join(', ') : '')}</td>
+  <td>${escapeHtml(Array.isArray(w.antonyms) ? w.antonyms.join(', ') : '')}</td>
       `;
-      tr.querySelector('[data-act="edit"]').addEventListener('click', () => fillWordForm(w));
-      tr.querySelector('[data-act="remove"]').addEventListener('click', () => {
-        const idx = list.words.findIndex(x => x.word.toLowerCase() === w.word.toLowerCase());
-        if (idx >= 0 && confirm(`Remove "${w.word}"?`)) {
-          list.words.splice(idx, 1);
-          save();
-          renderWords();
-        }
-      });
+      tr.addEventListener('click', () => openWordModal(w));
       els.wordsTbody.appendChild(tr);
     });
+  updateDetailHeader();
 }
 
 function renderStudyListChips() {
@@ -403,6 +570,15 @@ function fillWordForm(w) {
 
 function clearWordForm() {
   Object.values(els.wordInputs).forEach(i => i.value = '');
+  if (els.wordModal) {
+    const mi = els.wordModal.querySelector('.modal');
+    if (mi) mi.setAttribute('data-mode','new');
+  }
+  if (els.btnDeleteWord && els.btnDeleteWord.classList) {
+    els.btnDeleteWord.classList.add('hidden');
+  }
+  const tEl = $('#word-modal-title');
+  if (tEl) tEl.textContent = 'Add Word';
 }
 
 function normalizeWord(w) {
@@ -416,6 +592,51 @@ function normalizeWord(w) {
 }
 
 function activeList() { return state.lists.find(l => l.id === state.activeListId) || state.lists[0] || null; }
+
+// --- Modal Word Editing ---
+let editingOriginalWord = null;
+function openWordModal(word = null) {
+  editingOriginalWord = (word && word.word) ? word.word : null;
+  if (!els.wordModal) return; // safety
+  const modalInner = els.wordModal.querySelector('.modal');
+  if (word) {
+    fillWordForm(word);
+    if (modalInner) modalInner.setAttribute('data-mode','edit');
+    if (els.btnDeleteWord && els.btnDeleteWord.classList) {
+      els.btnDeleteWord.classList.remove('hidden');
+    }
+    const titleEl = $('#word-modal-title'); if (titleEl) titleEl.textContent = 'Edit Word';
+  } else {
+    clearWordForm();
+  }
+  els.wordModal.classList.remove('hidden');
+  if (els.wordInputs.word) els.wordInputs.word.focus();
+}
+function closeWordModal() {
+  if (els.wordModal && els.wordModal.classList) els.wordModal.classList.add('hidden');
+  editingOriginalWord = null;
+}
+function saveWordFromModal() {
+  const list = activeList(); if (!list) return;
+  const data = collectWordFromForm();
+  if (!data.word || !data.definition) { alert('Word and definition are required.'); return; }
+  const idx = editingOriginalWord ? list.words.findIndex(x => x.word.toLowerCase() === editingOriginalWord.toLowerCase()) : -1;
+  if (idx >= 0) list.words[idx] = data; else list.words.push(data);
+  save();
+  renderWords();
+  renderLists();
+  closeWordModal();
+  clearWordForm();
+}
+function deleteCurrentModalWord() {
+  const list = activeList(); if (!list || !editingOriginalWord) return;
+  const idx = list.words.findIndex(x => x.word.toLowerCase() === editingOriginalWord.toLowerCase());
+  if (idx < 0) { closeWordModal(); return; }
+  appConfirm('Delete Word', `Delete "${escapeHtml(editingOriginalWord)}"?`).then(ok => {
+    if (ok) { list.words.splice(idx,1); save(); renderWords(); renderLists(); updateDetailHeader(); }
+    closeWordModal();
+  });
+}
 
 // Study session
 function startSession() {
@@ -432,7 +653,7 @@ function startSession() {
     content,
     direction: currentDirection(),
     sessionMode: els.sessionMode.value, // learning | normal | test
-    synAntPrompt: els.synAntPrompt?.value || 'random', // random | all
+    synAntPrompt: (els.synAntPrompt && els.synAntPrompt.value) ? els.synAntPrompt.value : 'random', // random | all
   };
   state.session = new StudyEngine(pool, options, state.lists);
   els.session.classList.remove('hidden');
@@ -462,7 +683,7 @@ function nextQuestionSoon(correct) {
 function renderQuestion(q) {
   els.prompt.innerHTML = q.promptHtml;
   els.answerInputArea.innerHTML = '';
-  els.btnShowAnswer?.classList?.remove?.('hidden');
+    if (els.btnShowAnswer && els.btnShowAnswer.classList) els.btnShowAnswer.classList.remove('hidden');
   if (q.type === 'input') {
     const input = document.createElement('input');
     input.type = 'text';
@@ -523,7 +744,9 @@ function showContinueButton(onContinue) {
   btn.className = 'primary';
   // Prevent selecting new MC options until continue
   $all('input', els.answerInputArea).forEach(i => i.disabled = true);
-  els.btnShowAnswer?.classList?.add?.('hidden');
+  if (els.btnShowAnswer && els.btnShowAnswer.classList) {
+    els.btnShowAnswer.classList.add('hidden');
+  }
   const wrapper = document.createElement('div');
   wrapper.style.marginTop = '8px';
   wrapper.appendChild(btn);
@@ -531,7 +754,7 @@ function showContinueButton(onContinue) {
   btn.addEventListener('click', () => {
     // Clean up and proceed
     wrapper.remove();
-    onContinue?.();
+    if (typeof onContinue === 'function') onContinue();
   });
 }
 
@@ -543,7 +766,7 @@ function renderProgress() {
 
 function renderSessionSummary() {
   if (!state.session) return;
-  const summary = state.session.summary?.() || { attempts: 0, correct: 0, accuracy: 0 };
+  const summary = (state.session.summary ? state.session.summary() : null) || { attempts: 0, correct: 0, accuracy: 0 };
   els.feedback.innerHTML = `
     <div>
       <strong>Session complete.</strong><br/>
@@ -556,7 +779,7 @@ function escapeHtml(s = '') { return s.replace(/[&<>"']/g, c => ({ '&':'&amp;','
 
 function currentContentType() {
   const active = els.contentTabs.find(t => t.classList.contains('active'));
-  return active?.dataset.content || 'spelling';
+  return (active && active.dataset && active.dataset.content) ? active.dataset.content : 'spelling';
 }
 function currentDirection() {
   // read from label text to stay in sync with UI logic
@@ -599,11 +822,86 @@ function downloadJSON(filename, data) {
     }, 0);
   } catch (e) {
     console.error('downloadJSON failed', e);
-    alert('Export failed: ' + (e?.message || e));
+    alert('Export failed: ' + ((e && e.message) ? e.message : e));
   }
 }
 function sanitizeFileName(name) {
   return String(name).replace(/[\\\/:*?"<>|]+/g, '_').trim() || 'download.json';
+}
+
+// --- Generic Dialog System ---
+let dialogResolve = null;
+function openDialog({ title, body, mode = 'confirm', placeholder = '', defaultValue = '' }) {
+  if (!els.appDialog) return Promise.resolve(null);
+  els.appDialogTitle.textContent = title || 'Dialog';
+  els.appDialogBody.innerHTML = body || '';
+  els.appDialogButtons.innerHTML = '';
+  els.appDialogInputWrap.classList.add('hidden');
+  els.appDialogInput.value = '';
+  els.appDialog.classList.remove('hidden');
+  els.appDialog.setAttribute('aria-hidden','false');
+
+  const buttons = [];
+  if (mode === 'prompt') {
+    els.appDialogInputWrap.classList.remove('hidden');
+    els.appDialogInput.placeholder = placeholder || '';
+    els.appDialogInput.value = defaultValue || '';
+    setTimeout(() => { els.appDialogInput.focus(); els.appDialogInput.select(); }, 30);
+    buttons.push({ key: 'cancel', label: 'Cancel', class: 'icon-btn', value: null });
+    buttons.push({ key: 'ok', label: 'OK', class: 'primary', value: '__PROMPT_OK__' });
+  } else {
+    buttons.push({ key: 'cancel', label: 'Cancel', class: 'icon-btn', value: false });
+    buttons.push({ key: 'ok', label: 'OK', class: 'primary', value: true });
+  }
+
+  buttons.forEach(btnCfg => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = btnCfg.label;
+    b.className = btnCfg.class;
+    b.addEventListener('click', () => {
+      if (!dialogResolve) return;
+      if (mode === 'prompt') {
+        if (btnCfg.value === null) { dialogResolve(null); closeDialog(); return; }
+        dialogResolve(els.appDialogInput.value.trim() || '');
+        closeDialog();
+      } else {
+        dialogResolve(btnCfg.value);
+        closeDialog();
+      }
+    });
+    els.appDialogButtons.appendChild(b);
+  });
+
+  const onKey = (e) => {
+    if (e.key === 'Escape') { e.preventDefault(); if (dialogResolve) dialogResolve(mode === 'prompt' ? null : false); closeDialog(); }
+    if (mode === 'prompt' && e.key === 'Enter' && document.activeElement === els.appDialogInput) {
+      e.preventDefault(); if (dialogResolve) { dialogResolve(els.appDialogInput.value.trim() || ''); closeDialog(); }
+    }
+  };
+  document.addEventListener('keydown', onKey, { once: true });
+
+  return new Promise(res => { dialogResolve = res; });
+}
+
+function closeDialog() {
+  if (!els.appDialog) return;
+  els.appDialog.classList.add('hidden');
+  els.appDialog.setAttribute('aria-hidden','true');
+  dialogResolve = null;
+}
+if (typeof window !== 'undefined') {
+  window.addEventListener('click', (e) => {
+    if (e.target === els.appDialog) { if (dialogResolve) dialogResolve(false); closeDialog(); }
+  });
+}
+if (els.appDialogClose) els.appDialogClose.addEventListener('click', () => { if (dialogResolve) dialogResolve(false); closeDialog(); });
+
+function appConfirm(title, message) {
+  return openDialog({ title, body: `<p>${message}</p>`, mode: 'confirm' });
+}
+function appPrompt(title, message, defaultValue = '') {
+  return openDialog({ title, body: `<p>${message}</p>`, mode: 'prompt', defaultValue });
 }
 
 // --- OCR text parsing ---

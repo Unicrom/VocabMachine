@@ -7,6 +7,24 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <!-- SVG Icon Sprite -->
+    <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true" focusable="false">
+      <symbol id="icon-add" viewBox="0 0 24 24"><path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z"/></symbol>
+      <symbol id="icon-copy" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></symbol>
+      <symbol id="icon-trash" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></symbol>
+      <symbol id="icon-save" viewBox="0 0 24 24"><path d="M17 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></symbol>
+      <symbol id="icon-download" viewBox="0 0 24 24"><path d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z"/></symbol>
+      <symbol id="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></symbol>
+      <symbol id="icon-close" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></symbol>
+      <symbol id="icon-check" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></symbol>
+      <symbol id="icon-eye" viewBox="0 0 24 24"><path d="M12 6a9.77 9.77 0 0 0-10 6 9.77 9.77 0 0 0 20 0 9.77 9.77 0 0 0-10-6zm0 10a4 4 0 1 1 4-4 4 4 0 0 1-4 4z"/></symbol>
+      <symbol id="icon-upload" viewBox="0 0 24 24"><path d="M5 20h14v-2H5v2zM9 8v6h2V8h2l-3-3-3 3h2z"/></symbol>
+      <symbol id="icon-file-text" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm1 14H9v-2h6v2zm0-4H9v-2h6v2zm-3-5V3.5L18.5 9H12z"/></symbol>
+      <symbol id="icon-refresh" viewBox="0 0 24 24"><path d="M17.65 6.35A7.95 7.95 0 0 0 12 4V1L7 6l5 5V8c2.76 0 5 2.24 5 5a5 5 0 0 1-9.9 1H5.02A7 7 0 0 0 19 13c0-2.21-.9-4.21-2.35-5.65z"/></symbol>
+      <symbol id="icon-warning" viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></symbol>
+      <symbol id="icon-gear" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.07-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.14 7.14 0 0 0-1.63-.94l-.36-2.54A.5.5 0 0 0 14.89 2h-3.78a.5.5 0 0 0-.5.42l-.37 2.54c-.6.24-1.16.55-1.68.93l-2.39-.96a.5.5 0 0 0-.6.22L3.65 8.01a.5.5 0 0 0 .12.64l2.03 1.58c-.05.31-.08.65-.08.98 0 .31.02.63.07.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.43.34.68.22l2.39-.96c.5.38 1.05.7 1.64.94l.37 2.54c.04.24.25.42.5.42h3.78c.25 0 .46-.18.5-.42l.37-2.54c.6-.24 1.16-.55 1.68-.93l2.39.96c.25.12.54.02.68-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></symbol>
+  <symbol id="icon-menu" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/></symbol>
+    </svg>
     <header class="app-header">
       <h1>Vocab Machine 2001</h1>
       <nav class="tabs" role="tablist" aria-label="Primary">
@@ -17,71 +35,57 @@
     </header>
 
     <main>
-      <!-- Lists Panel -->
-      <section id="panel-lists" class="panel active" role="tabpanel" aria-labelledby="Lists">
-        <div class="panel-header">
-          <h2>Your Lists</h2>
-          <div class="actions">
-            <button id="btn-new-list" class="primary">New List</button>
-            <button id="btn-duplicate-list">Duplicate</button>
-            <button id="btn-delete-list" class="danger">Delete</button>
-          </div>
+
+    <!-- Generic Dialog Modal -->
+    <div id="app-dialog" class="modal-overlay hidden" aria-hidden="true">
+      <div class="modal small" role="dialog" aria-modal="true" aria-labelledby="app-dialog-title">
+        <div class="modal-header">
+          <h3 id="app-dialog-title">Dialog</h3>
+          <button type="button" id="app-dialog-close" class="icon-btn" aria-label="Close dialog"><svg class="icon"><use href="#icon-close"/></svg></button>
         </div>
-        <div class="lists-layout">
-          <aside class="list-sidebar">
-            <input id="list-search" type="search" placeholder="Search lists…" />
-            <ul id="lists" class="lists"></ul>
-          </aside>
-          <section class="list-editor">
-            <div class="list-meta">
-              <label>
-                List name
-                <input id="list-name" type="text" placeholder="e.g., GRE Set 1" />
-              </label>
-              <div class="meta-actions">
-                <button id="btn-save-list" class="primary">Save</button>
-                <button id="btn-clear-words">Clear Words</button>
-                <button id="btn-load-sample" title="Load a tiny sample list">Load Sample</button>
-              </div>
-            </div>
+        <div class="modal-body" id="app-dialog-body"></div>
+        <form id="app-dialog-form" class="modal-form" autocomplete="off">
+          <div class="dialog-input-wrap hidden" id="app-dialog-input-wrap">
+            <input type="text" id="app-dialog-input" />
+          </div>
+          <div class="modal-footer" id="app-dialog-buttons" style="display:flex; gap:10px; justify-content:flex-end;">
+            <!-- buttons inserted dynamically -->
+          </div>
+        </form>
+      </div>
+    </div>
 
-            <div class="word-form">
-              <h3>Add / Edit Word</h3>
-              <div class="grid-2">
-                <label>
-                  Word
-                  <input id="word-input" type="text" />
-                </label>
-                <label>
-                  Example sentence (optional)
-                  <input id="example-input" type="text" />
-                </label>
-              </div>
-              <label>
-                Definition
-                <textarea id="definition-input" rows="2"></textarea>
-              </label>
-              <div class="grid-2">
-                <label>
-                  Synonyms (comma-separated)
-                  <input id="synonyms-input" type="text" />
-                </label>
-                <label>
-                  Antonyms (comma-separated)
-                  <input id="antonyms-input" type="text" />
-                </label>
-              </div>
-              <div class="form-actions">
-                <button id="btn-add-word" class="primary">Add/Update Word</button>
-                <button id="btn-reset-word">Reset</button>
-              </div>
-            </div>
+      <!-- Lists Panel (Overview + Detail) -->
+      <section id="panel-lists" class="panel active" role="tabpanel" aria-labelledby="Lists">
+        <!-- Overview -->
+        <div id="lists-overview" class="lists-overview">
+          <div class="panel-header lists-bar">
+              <input id="list-search" class="full-search" type="search" placeholder="Search lists & words…" aria-label="Search lists" />
+              <button id="btn-new-list" class="primary icon-btn" aria-label="New List" title="New List"><svg class="icon" aria-hidden="true"><use href="#icon-add"/></svg></button>
+          </div>
+          <div id="list-cards" class="list-cards" aria-live="polite"></div>
+        </div>
 
+        <!-- Detail -->
+        <div id="list-detail" class="list-detail hidden" aria-live="polite">
+          <div class="detail-header">
+            <div class="left">
+              <button id="btn-back-lists" class="icon-btn" aria-label="Back to Lists" title="Back to Lists"><svg class="icon" aria-hidden="true"><use href="#icon-close"/></svg></button>
+              <input id="detail-title" type="text" class="title-input" placeholder="List name" aria-label="List name" />
+            </div>
+            <div class="detail-actions">
+              <button id="btn-duplicate-list" class="icon-btn" aria-label="Duplicate List" title="Duplicate List"><svg class="icon" aria-hidden="true"><use href="#icon-copy"/></svg></button>
+              <button id="btn-delete-list" class="danger icon-btn" aria-label="Delete List" title="Delete List"><svg class="icon" aria-hidden="true"><use href="#icon-trash"/></svg></button>
+              <button id="btn-export-current" class="icon-btn" aria-label="Export This List" title="Export This List"><svg class="icon" aria-hidden="true"><use href="#icon-download"/></svg></button>
+            </div>
+          </div>
+            <div class="list-detail-body">
+            <div class="list-meta-inline bare">
+              <input id="word-search" type="search" placeholder="Search words…" />
+              <button id="btn-new-word" class="primary icon-btn" aria-label="Add New Word" title="Add New Word"><svg class="icon" aria-hidden="true"><use href="#icon-add"/></svg></button>
+            </div>
             <div class="words-table">
-              <div class="table-actions">
-                <input id="word-search" type="search" placeholder="Filter words…" />
-                <button id="btn-export-current" title="Export this list as JSON">Export List</button>
-              </div>
+              <div class="table-actions"></div>
               <table>
                 <thead>
                   <tr>
@@ -89,13 +93,12 @@
                     <th>Definition</th>
                     <th>Synonyms</th>
                     <th>Antonyms</th>
-                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody id="words-tbody"></tbody>
               </table>
             </div>
-          </section>
+          </div>
         </div>
       </section>
 
@@ -123,13 +126,13 @@
           <!-- 3) Basic controls -->
           <div class="setup-block">
             <div class="right-align">
-              <button id="btn-start-study" class="primary">Start Session</button>
+              <button id="btn-start-study" class="primary icon-btn" aria-label="Start Session" title="Start Session"><svg class="icon" aria-hidden="true"><use href="#icon-play"/></svg></button>
             </div>
           </div>
         </div>
 
         <!-- Floating Settings Button & Panel -->
-        <button id="btn-settings" class="floating-settings" title="Study settings">⚙️</button>
+  <button id="btn-settings" class="floating-settings" title="Study settings" aria-label="Study settings"><svg class="icon" aria-hidden="true"><use href="#icon-gear"/></svg></button>
         <div id="settings-panel" class="settings-panel hidden" role="dialog" aria-modal="false" aria-label="Study settings">
           <div class="settings-row">
             <button id="direction-label" class="toggle">Match <span>answer</span> to Word</button>
@@ -155,7 +158,7 @@
           <div class="session-header">
             <div class="progress"><span id="progress-text">0 / 0</span></div>
             <div class="session-actions">
-              <button id="btn-end-session" class="danger">End</button>
+              <button id="btn-end-session" class="danger icon-btn" aria-label="End Session" title="End Session"><svg class="icon" aria-hidden="true"><use href="#icon-close"/></svg></button>
             </div>
           </div>
           <div id="prompt" class="prompt"></div>
@@ -163,8 +166,8 @@
           <form id="answer-form" class="answer-area" autocomplete="off">
             <div id="answer-input-area" class="answer-input-area"></div>
             <div class="answer-actions">
-              <button type="submit" class="primary">Submit</button>
-              <button type="button" id="btn-show-answer">Show Answer</button>
+              <button type="submit" class="primary icon-btn" aria-label="Submit Answer" title="Submit Answer"><svg class="icon" aria-hidden="true"><use href="#icon-check"/></svg></button>
+              <button type="button" id="btn-show-answer" class="icon-btn" aria-label="Show Answer" title="Show Answer"><svg class="icon" aria-hidden="true"><use href="#icon-eye"/></svg></button>
             </div>
           </form>
 
@@ -180,20 +183,29 @@
         <div class="import-export">
           <div class="export-block">
             <h3>Export all lists</h3>
-            <button id="btn-export-all" class="primary">Download JSON</button>
+            <button id="btn-export-all" class="primary icon-btn" aria-label="Export All Lists" title="Export All Lists"><svg class="icon" aria-hidden="true"><use href="#icon-download"/></svg></button>
           </div>
 
           <div class="import-block">
             <h3>Import JSON</h3>
             <input id="import-file" type="file" accept="application/json" />
-            <button id="btn-import" disabled>Import</button>
+            <button id="btn-import" disabled class="icon-btn" aria-label="Import JSON" title="Import JSON"><svg class="icon" aria-hidden="true"><use href="#icon-upload"/></svg></button>
           </div>
 
           <div class="import-block">
             <h3>Import from OCR text files</h3>
             <p class="note">Select one or more .txt files (named like 1-1.txt). Each file becomes a list. We’ll parse definitions, examples, synonyms, and antonyms.</p>
             <input id="import-ocr" type="file" accept=".txt,.tzt" multiple />
-            <button id="btn-import-ocr" disabled>Import Text Lists</button>
+            <button id="btn-import-ocr" disabled class="icon-btn" aria-label="Import Text Lists" title="Import Text Lists"><svg class="icon" aria-hidden="true"><use href="#icon-file-text"/></svg></button>
+          </div>
+
+          <div class="import-block">
+            <h3>Built-in Lists</h3>
+            <p class="note">Re-import the default lists that ship with the app. Merge keeps your edits; Overwrite replaces lists with the built-in versions (stats reset).</p>
+            <div>
+              <button id="btn-builtins-merge" class="icon-btn" aria-label="Merge Built-in Lists" title="Merge Built-in Lists"><svg class="icon" aria-hidden="true"><use href="#icon-refresh"/></svg></button>
+              <button id="btn-builtins-overwrite" class="danger icon-btn" aria-label="Overwrite Built-in Lists" title="Overwrite Built-in Lists"><svg class="icon" aria-hidden="true"><use href="#icon-warning"/></svg></button>
+            </div>
           </div>
 
           <p class="note">Data is stored locally in your browser (localStorage). No account required.</p>
@@ -204,6 +216,42 @@
     <footer class="app-footer">
       <small>Made for personal study • Data stays on this device</small>
     </footer>
+
+    <!-- Word Modal -->
+    <div id="word-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="word-modal-title">
+      <div class="modal" data-mode="new">
+        <div class="modal-header">
+          <h3 id="word-modal-title">Add Word</h3>
+          <button id="btn-close-word-modal" class="icon-btn" aria-label="Close"><svg class="icon" aria-hidden="true"><use href="#icon-close"/></svg></button>
+        </div>
+        <form id="word-form" autocomplete="off">
+          <div class="grid-2">
+            <label>Word
+              <input id="word-input" type="text" />
+            </label>
+            <label>Example sentence (optional)
+              <input id="example-input" type="text" />
+            </label>
+          </div>
+          <label>Definition
+            <textarea id="definition-input" rows="3"></textarea>
+          </label>
+          <div class="grid-2">
+            <label>Synonyms (comma-separated)
+              <input id="synonyms-input" type="text" />
+            </label>
+            <label>Antonyms (comma-separated)
+              <input id="antonyms-input" type="text" />
+            </label>
+          </div>
+          <div class="modal-footer form-actions">
+            <button id="btn-add-word" class="primary icon-btn" aria-label="Save Word" title="Save Word"><svg class="icon" aria-hidden="true"><use href="#icon-check"/></svg></button>
+            <button id="btn-reset-word" type="button" class="icon-btn" aria-label="Reset" title="Reset"><svg class="icon" aria-hidden="true"><use href="#icon-refresh"/></svg></button>
+            <button id="btn-delete-word" type="button" class="danger icon-btn hidden" aria-label="Delete Word" title="Delete Word"><svg class="icon" aria-hidden="true"><use href="#icon-trash"/></svg></button>
+          </div>
+        </form>
+      </div>
+    </div>
 
     <script type="module" src="src/main.js"></script>
   </body>
