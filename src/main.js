@@ -19,7 +19,6 @@ function init() {
   wireTabs();
   wireListPanel();
   wireStudyPanel();
-  wireImportExport();
   load();
   // Merge built-in default lists (non-destructive) asynchronously
   loadBuiltInLists('merge');
@@ -82,14 +81,9 @@ function cacheEls() {
   els.btnShowAnswer = $('#btn-show-answer');
   els.feedback = $('#feedback');
 
-  // Import/export
-  els.btnExportAll = $('#btn-export-all');
+  // Inline JSON import only (OCR & built-ins removed)
   els.importFile = $('#import-file');
   els.btnImport = $('#btn-import');
-  els.importOcr = $('#import-ocr');
-  els.btnImportOcr = $('#btn-import-ocr');
-  els.btnBuiltinsMerge = $('#btn-builtins-merge');
-  els.btnBuiltinsOverwrite = $('#btn-builtins-overwrite');
   // Generic dialog
   els.appDialog = $('#app-dialog');
   els.appDialogTitle = $('#app-dialog-title');
@@ -182,6 +176,64 @@ function wireListPanel() {
   if (els.wordFormEl) els.wordFormEl.addEventListener('submit', (e) => { e.preventDefault(); saveWordFromModal(); });
   if (els.btnResetWord) els.btnResetWord.addEventListener('click', clearWordForm);
   if (els.btnDeleteWord) els.btnDeleteWord.addEventListener('click', deleteCurrentModalWord);
+
+  // Inline JSON import (lists only)
+  if (els.btnImport && els.importFile) {
+    els.btnImport.addEventListener('click', () => els.importFile.click());
+    els.importFile.addEventListener('change', async () => {
+      const file = (els.importFile.files && els.importFile.files[0]);
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        // Accept formats:
+        // 1) { lists: [ { name, words }, ... ] }
+        // 2) [ { name, words }, ... ]
+        // 3) { name, words }
+        let incoming = [];
+        if (data && Array.isArray(data.lists)) incoming = data.lists;
+        else if (Array.isArray(data)) incoming = data;
+        else if (data && typeof data === 'object' && data.name && Array.isArray(data.words)) incoming = [data];
+        if (!incoming.length) { alert('Invalid JSON: expected a list object, an array of lists, or {"lists": [...]}'); return; }
+
+        const nameMap = new Map(state.lists.map(l => [l.name, l]));
+        let added = 0, merged = 0, addedWords = 0;
+        incoming.forEach(src => {
+          if (!src || !src.name || !Array.isArray(src.words)) return;
+          const cleanedWords = src.words
+            .filter(w => w && w.word && w.definition)
+            .map(w => ({
+              word: String(w.word).trim(),
+              example: (w.example || '').trim(),
+              definition: String(w.definition).trim(),
+              synonyms: Array.isArray(w.synonyms) ? w.synonyms.filter(Boolean) : [],
+              antonyms: Array.isArray(w.antonyms) ? w.antonyms.filter(Boolean) : [],
+            }));
+          const existing = nameMap.get(src.name);
+            if (existing) {
+              const existingWords = new Map(existing.words.map(w => [w.word.toLowerCase(), w]));
+              cleanedWords.forEach(w => {
+                const key = w.word.toLowerCase();
+                if (!existingWords.has(key)) { existing.words.push(w); addedWords++; }
+              });
+              merged++;
+            } else {
+              state.lists.push({ id: crypto.randomUUID(), name: src.name, words: cleanedWords, stats: {} });
+              added++;
+              addedWords += cleanedWords.length;
+            }
+        });
+        save();
+        renderLists();
+        renderStudyListChips();
+        alert(`Import complete. New lists: ${added}, merged: ${merged}, words added: ${addedWords}.`);
+      } catch (e) {
+        alert('Import failed: ' + (e && e.message ? e.message : e));
+      } finally {
+        els.importFile.value = '';
+      }
+    });
+  }
 }
 
 function wireStudyPanel() {
@@ -240,76 +292,6 @@ function wireStudyPanel() {
   updateDirectionLabel();
 }
 
-function wireImportExport() {
-  els.btnExportAll.addEventListener('click', () => {
-    downloadJSON('vocab_machine_export.json', { version: 1, lists: state.lists });
-  });
-  els.importFile.addEventListener('change', () => {
-  els.btnImport.disabled = !(els.importFile.files && els.importFile.files.length);
-  });
-  els.btnImport.addEventListener('click', async () => {
-  const file = (els.importFile.files && els.importFile.files[0]); if (!file) return;
-    const text = await file.text();
-    try {
-      const data = JSON.parse(text);
-      if (!data || !Array.isArray(data.lists)) throw new Error('Invalid format');
-      // Merge by list name; add if new
-      data.lists.forEach(importList => {
-        const existing = state.lists.find(l => l.name === importList.name);
-  const clone = { ...importList, id: (existing ? existing.id : crypto.randomUUID()) };
-        if (existing) Object.assign(existing, clone);
-        else state.lists.push(clone);
-      });
-      save();
-      render();
-      alert('Import complete.');
-    } catch (e) {
-      alert('Import failed: ' + e.message);
-    }
-  });
-
-  // OCR text import
-  els.importOcr.addEventListener('change', () => {
-  els.btnImportOcr.disabled = !(els.importOcr.files && els.importOcr.files.length);
-  });
-  els.btnImportOcr.addEventListener('click', async () => {
-    const files = Array.from(els.importOcr.files || []);
-    if (!files.length) return;
-    const newLists = [];
-    for (const file of files) {
-      try {
-        const text = await file.text();
-        const words = parseOcrList(text);
-        const name = file.name.replace(/\.[^.]+$/, '');
-        newLists.push({ id: crypto.randomUUID(), name, words, stats: {} });
-      } catch (e) {
-        console.error('Failed to parse', file.name, e);
-        alert(`Failed to parse ${file.name}: ${e.message}`);
-      }
-    }
-    // Merge by list name
-    newLists.forEach(nl => {
-      const existing = state.lists.find(l => l.name === nl.name);
-      if (existing) Object.assign(existing, nl, { id: existing.id });
-      else state.lists.push(nl);
-    });
-    save();
-    render();
-    alert('Text lists imported.');
-  });
-
-  // Built-in lists re-import
-  if (els.btnBuiltinsMerge) els.btnBuiltinsMerge.addEventListener('click', async () => {
-    await loadBuiltInLists('merge', true);
-    alert('Built-in lists merged (missing lists added).');
-  });
-  if (els.btnBuiltinsOverwrite) els.btnBuiltinsOverwrite.addEventListener('click', async () => {
-    const ok = await appConfirm('Overwrite Built-ins', 'Overwrite built-in lists? This resets their words & stats. Continue?');
-    if (!ok) return;
-    await loadBuiltInLists('overwrite', true);
-    alert('Built-in lists overwritten.');
-  });
-}
 
 function load() {
   state.lists = Storage.loadLists();
@@ -366,7 +348,8 @@ function render() {
 function renderLists() {
   const filter = (els.listSearch.value || '').toLowerCase();
   els.listCards.innerHTML = '';
-  state.lists
+  // Sort lists alphabetically by name (case-insensitive) for overview display
+  state.lists.slice().sort((a,b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
     .filter(l => {
       if (l.name.toLowerCase().includes(filter)) return true;
       if (!filter) return true;
@@ -437,7 +420,15 @@ function renderLists() {
 
 function previewWords(words) {
   if (!words.length) return '<em class="muted">(empty)</em>';
-  return words.map(w => `<div class="word-line">${escapeHtml(w.word)}</div>`).join('');
+  const maxLines = 20; // total lines to render for tall cards
+  if (words.length <= maxLines) {
+    return words.map(w => `<div class=\"word-line\">${escapeHtml(w.word)}</div>`).join('');
+  }
+  const visible = words.slice(0, maxLines - 1) // 19 words
+    .map(w => `<div class=\"word-line\">${escapeHtml(w.word)}</div>`)
+    .join('');
+  const remaining = words.length - (maxLines - 1);
+  return visible + `<div class=\"word-line more-line\">+ ${remaining} more</div>`;
 }
 
 function closeOtherMenus(current) {
@@ -904,98 +895,5 @@ function appPrompt(title, message, defaultValue = '') {
   return openDialog({ title, body: `<p>${message}</p>`, mode: 'prompt', defaultValue });
 }
 
-// --- OCR text parsing ---
-function parseOcrList(text) {
-  // Strategy: Split into entries by numbering patterns like "1." at line start.
-  // For each entry, extract headword (first line after number), then find definition, synonyms, antonyms, and example.
-  const norm = text.replace(/\r/g, '');
-  const blocks = norm.split(/\n\s*(?:\d+)\.\s+/g).filter(Boolean);
-  // If the text sometimes starts before first number, handle alt split
-  if (blocks.length <= 1) {
-    // fallback: split on lines starting with a word and IPA line following; still attempt minimal
-    return minimalParse(norm);
-  }
-  const words = [];
-  for (const raw of blocks) {
-    const entry = raw.trim();
-    const lines = entry.split(/\n+/).map(s => s.trim()).filter(Boolean);
-    if (!lines.length) continue;
-    // Headword often in first line; strip punctuation
-    let word = lines[0].replace(/[^A-Za-z\-']/g, '').toLowerCase();
-    // Fix common OCR mistakes
-    word = fixOcrWord(word);
-
-    const joined = entry;
-    const definition = extractDefinition(joined);
-    const synonyms = extractList(joined, /\bSYNONYMS?\s*:\s*([^\n]+)/i);
-    const antonyms = extractList(joined, /\bANTONYMS?\s*:\s*([^\n]+)/i);
-    const example = extractExample(joined);
-
-    if (!word) continue;
-    words.push({ word, definition, example, synonyms, antonyms });
-  }
-  return words;
-}
-
-function extractDefinition(text) {
-  // Heuristic: after (adj.)/(n.)/(v.) .... until next SYNONYMS/ANTONYMS or blank line with numbered next entry
-  const m = text.match(/\((?:adj|adv|n|v|pron|prep|conj|interj)\.[^)]*\)\s*([^\n][\s\S]*?)(?:\n\s*SYNONYMS?:|\n\s*ANTONYMS?:|\n?\s*$)/i);
-  if (m) {
-    return cleanLine(m[1]);
-  }
-  // Fallback: first sentence-like chunk
-  const lines = text.split(/\n+/).map(s => s.trim()).filter(Boolean);
-  for (const line of lines) {
-    if (/SYNONYMS?:|ANTONYMS?:/i.test(line)) break;
-    if (/[.;]$/.test(line) || line.split(' ').length > 4) return cleanLine(line);
-  }
-  return '';
-}
-
-function extractList(text, regex) {
-  const m = text.match(regex);
-  if (!m) return [];
-  return m[1]
-    .replace(/\([^)]*\)/g, '')
-    .split(/[,;]/)
-    .map(s => s.trim())
-    .filter(Boolean)
-    .map(fixOcrWord);
-}
-
-function extractExample(text) {
-  // Heuristic: Look for lines that begin with capital and end with period near definition area and not containing SYN/ANTONYMS labels.
-  const lines = text.split(/\n+/).map(s => s.trim());
-  for (const line of lines) {
-    if (/SYNONYMS?:|ANTONYMS?:/i.test(line)) continue;
-    if (/^[A-Z][^\n]*\.$/.test(line) && line.split(' ').length > 4) return line;
-  }
-  return '';
-}
-
-function cleanLine(s) {
-  return s.replace(/\s+/g, ' ').replace(/\s+\./g, '.').trim();
-}
-
-function minimalParse(text) {
-  // fallback: just pick capitalized words as entries
-  const words = [];
-  const headwords = Array.from(text.matchAll(/\n\s*(?:\d+\.)?\s*([A-Za-z][A-Za-z\-']{2,})\s*\n/g)).map(m => m[1]);
-  const uniq = Array.from(new Set(headwords.map(w => fixOcrWord(w.toLowerCase()))));
-  return uniq.map(word => ({ word, definition: '', example: '', synonyms: [], antonyms: [] }));
-}
-
-function fixOcrWord(w) {
-  const map = new Map([
-    ['encomlum','encomium'],
-    ['insatlable','insatiable'],
-    ['reconnaissance'.toLowerCase(),'reconnaissance'],
-    ['tallsman','talisman'],
-    ['pecunlary','pecuniary'],
-  ]);
-  if (map.has(w)) return map.get(w);
-  // common OCR char swaps
-  return w.replace(/0/g,'o').replace(/1/g,'l');
-}
 
 document.addEventListener('DOMContentLoaded', init);

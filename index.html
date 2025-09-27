@@ -18,7 +18,7 @@
       <symbol id="icon-close" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></symbol>
       <symbol id="icon-check" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></symbol>
       <symbol id="icon-eye" viewBox="0 0 24 24"><path d="M12 6a9.77 9.77 0 0 0-10 6 9.77 9.77 0 0 0 20 0 9.77 9.77 0 0 0-10-6zm0 10a4 4 0 1 1 4-4 4 4 0 0 1-4 4z"/></symbol>
-      <symbol id="icon-upload" viewBox="0 0 24 24"><path d="M5 20h14v-2H5v2zM9 8v6h2V8h2l-3-3-3 3h2z"/></symbol>
+  <symbol id="icon-upload" viewBox="0 0 24 24"><path d="M5 20h14v-2H5v2zM11 8v6h2V8h3l-4-4-4 4h3z"/></symbol>
       <symbol id="icon-file-text" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm1 14H9v-2h6v2zm0-4H9v-2h6v2zm-3-5V3.5L18.5 9H12z"/></symbol>
       <symbol id="icon-refresh" viewBox="0 0 24 24"><path d="M17.65 6.35A7.95 7.95 0 0 0 12 4V1L7 6l5 5V8c2.76 0 5 2.24 5 5a5 5 0 0 1-9.9 1H5.02A7 7 0 0 0 19 13c0-2.21-.9-4.21-2.35-5.65z"/></symbol>
       <symbol id="icon-warning" viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></symbol>
@@ -30,7 +30,6 @@
       <nav class="tabs" role="tablist" aria-label="Primary">
         <button class="tab active" data-tab="lists" role="tab" aria-selected="true">Lists</button>
         <button class="tab" data-tab="study" role="tab" aria-selected="false">Study</button>
-        <button class="tab" data-tab="export" role="tab" aria-selected="false">Import/Export</button>
       </nav>
     </header>
 
@@ -61,7 +60,11 @@
         <div id="lists-overview" class="lists-overview">
           <div class="panel-header lists-bar">
               <input id="list-search" class="full-search" type="search" placeholder="Search lists & words…" aria-label="Search lists" />
-              <button id="btn-new-list" class="primary icon-btn" aria-label="New List" title="New List"><svg class="icon" aria-hidden="true"><use href="#icon-add"/></svg></button>
+              <div class="lists-bar-actions" style="display:flex; gap:8px;">
+                <button id="btn-new-list" class="primary icon-btn" aria-label="New List" title="New List"><svg class="icon" aria-hidden="true"><use href="#icon-add"/></svg></button>
+                <input id="import-file" type="file" accept="application/json" class="hidden" />
+                <button id="btn-import" class="icon-btn" aria-label="Import Lists (JSON)" title="Import Lists (JSON)"><svg class="icon" aria-hidden="true"><use href="#icon-upload"/></svg></button>
+              </div>
           </div>
           <div id="list-cards" class="list-cards" aria-live="polite"></div>
         </div>
@@ -175,42 +178,6 @@
         </div>
       </section>
 
-      <!-- Import/Export Panel -->
-      <section id="panel-export" class="panel" role="tabpanel" aria-labelledby="Import/Export">
-        <div class="panel-header">
-          <h2>Import / Export</h2>
-        </div>
-        <div class="import-export">
-          <div class="export-block">
-            <h3>Export all lists</h3>
-            <button id="btn-export-all" class="primary icon-btn" aria-label="Export All Lists" title="Export All Lists"><svg class="icon" aria-hidden="true"><use href="#icon-download"/></svg></button>
-          </div>
-
-          <div class="import-block">
-            <h3>Import JSON</h3>
-            <input id="import-file" type="file" accept="application/json" />
-            <button id="btn-import" disabled class="icon-btn" aria-label="Import JSON" title="Import JSON"><svg class="icon" aria-hidden="true"><use href="#icon-upload"/></svg></button>
-          </div>
-
-          <div class="import-block">
-            <h3>Import from OCR text files</h3>
-            <p class="note">Select one or more .txt files (named like 1-1.txt). Each file becomes a list. We’ll parse definitions, examples, synonyms, and antonyms.</p>
-            <input id="import-ocr" type="file" accept=".txt,.tzt" multiple />
-            <button id="btn-import-ocr" disabled class="icon-btn" aria-label="Import Text Lists" title="Import Text Lists"><svg class="icon" aria-hidden="true"><use href="#icon-file-text"/></svg></button>
-          </div>
-
-          <div class="import-block">
-            <h3>Built-in Lists</h3>
-            <p class="note">Re-import the default lists that ship with the app. Merge keeps your edits; Overwrite replaces lists with the built-in versions (stats reset).</p>
-            <div>
-              <button id="btn-builtins-merge" class="icon-btn" aria-label="Merge Built-in Lists" title="Merge Built-in Lists"><svg class="icon" aria-hidden="true"><use href="#icon-refresh"/></svg></button>
-              <button id="btn-builtins-overwrite" class="danger icon-btn" aria-label="Overwrite Built-in Lists" title="Overwrite Built-in Lists"><svg class="icon" aria-hidden="true"><use href="#icon-warning"/></svg></button>
-            </div>
-          </div>
-
-          <p class="note">Data is stored locally in your browser (localStorage). No account required.</p>
-        </div>
-      </section>
     </main>
 
     <footer class="app-footer">
