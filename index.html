@@ -115,7 +115,8 @@
           <div class="study-session-wrap">
             <!-- Toggle moved outside config -->
             <div class="session-top">
-              <div class="progress-bar" aria-hidden="false"><div id="progress-bar-inner" class="inner" style="width:0%"></div></div>
+              <!-- Added id and hidden class so JS can control visibility (only show during Test sessions) -->
+              <div class="progress-bar hidden" id="progress-bar-wrap" aria-hidden="true"><div id="progress-bar-inner" class="inner" style="width:0%"></div></div>
               <div class="stat-chips">
                 <div class="chip-stat"><span id="chip-attempts">0</span><label>Attempts</label></div>
                 <div class="chip-stat"><span id="chip-accuracy">0%</span><label>Accuracy</label></div>

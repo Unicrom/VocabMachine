@@ -19,6 +19,13 @@ function $all(sel, root = document) { return Array.from(root.querySelectorAll(se
 
 function init() {
   cacheEls();
+  // Bind generic dialog close button now that elements are cached
+  if (els.appDialogClose) {
+    els.appDialogClose.addEventListener('click', () => {
+      if (dialogResolve) dialogResolve(false);
+      closeDialog();
+    });
+  }
   wireTabs();
   wireListPanel();
   wireStudyPanel();
@@ -26,6 +33,12 @@ function init() {
   // Merge built-in default lists (non-destructive) asynchronously
   loadBuiltInLists('merge');
   render();
+  // Ensure progress bar hidden by default until a test session begins (new markup has id)
+  const pbWrap = document.getElementById('progress-bar-wrap');
+  if (pbWrap) {
+    pbWrap.classList.add('hidden');
+    pbWrap.setAttribute('aria-hidden','true');
+  }
 }
 
 function cacheEls() {
@@ -117,6 +130,20 @@ function wireTabs() {
       document.getElementById(id).classList.add('active');
       if (tab.dataset.tab === 'study') {
         document.body.classList.add('in-study');
+        // Persist any pending list changes & refresh chips when entering Study
+        save();
+        renderStudyListChips();
+        // Update progress bar visibility (only when a test session is active)
+        const pbWrap = document.getElementById('progress-bar-wrap');
+        if (pbWrap) {
+          if (state.session && state.session.options && state.session.options.sessionMode === 'test') {
+            pbWrap.classList.remove('hidden');
+            pbWrap.setAttribute('aria-hidden','false');
+          } else {
+            pbWrap.classList.add('hidden');
+            pbWrap.setAttribute('aria-hidden','true');
+          }
+        }
       } else {
         document.body.classList.remove('in-study');
       }
@@ -133,6 +160,8 @@ function wireListPanel() {
     state.activeListId = id;
     save();
     openListDetail(id);
+    // Immediately reflect in Study panel list chips
+    renderStudyListChips();
   });
 
   els.btnDuplicateList.addEventListener('click', () => {
@@ -146,6 +175,8 @@ function wireListPanel() {
     state.activeListId = id;
     save();
     openListDetail(id);
+    // Refresh chips for new duplicate
+    renderStudyListChips();
   });
 
   els.btnDeleteList.addEventListener('click', async () => {
@@ -173,7 +204,7 @@ function wireListPanel() {
         list.name = v;
         save();
         renderLists();
-        renderStudyListChips();
+        renderStudyListChips(); // keep chips in sync
       }
     };
     els.detailTitle.addEventListener('blur', commit);
@@ -599,7 +630,9 @@ function renderWords() {
 
 function renderStudyListChips() {
   els.studyListChips.innerHTML = '';
-  state.lists.forEach(l => {
+  // Sort lists by name (case-insensitive) for consistent order
+  const sorted = state.lists.slice().sort((a,b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+  sorted.forEach(l => {
     const id = `chip-${l.id}`;
     const label = document.createElement('label');
     label.className = 'chip';
@@ -722,7 +755,18 @@ function startSession() {
   state.streak = 0;
   updateStatsChips();
   nextQuestion(true);
-  renderProgress();
+  // Show/hide progress bar only for test mode
+  const pbWrap = document.getElementById('progress-bar-wrap');
+  if (pbWrap) {
+    if (options.sessionMode === 'test') {
+      pbWrap.classList.remove('hidden');
+      pbWrap.setAttribute('aria-hidden','false');
+      renderProgress();
+    } else {
+      pbWrap.classList.add('hidden');
+      pbWrap.setAttribute('aria-hidden','true');
+    }
+  }
   // Toggle start/end buttons
   if (els.btnStartStudy) els.btnStartStudy.classList.add('hidden');
   if (els.btnEndSession) els.btnEndSession.classList.remove('hidden');
@@ -733,6 +777,9 @@ function endSession() {
   state.session = null;
   els.session.classList.add('hidden');
   if (els.sessionPlaceholder) els.sessionPlaceholder.classList.remove('hidden');
+  // Always hide progress bar when session ends
+  const pbWrap = document.getElementById('progress-bar-wrap');
+  if (pbWrap) { pbWrap.classList.add('hidden'); pbWrap.setAttribute('aria-hidden','true'); }
   // Restore buttons
   if (els.btnEndSession) els.btnEndSession.classList.add('hidden');
   if (els.btnStartStudy) els.btnStartStudy.classList.remove('hidden');
@@ -1105,7 +1152,7 @@ if (typeof window !== 'undefined') {
     if (e.target === els.appDialog) { if (dialogResolve) dialogResolve(false); closeDialog(); }
   });
 }
-if (els.appDialogClose) els.appDialogClose.addEventListener('click', () => { if (dialogResolve) dialogResolve(false); closeDialog(); });
+// (Dialog close button binding moved into init after cacheEls())
 
 function appConfirm(title, message) {
   return openDialog({ title, body: `<p>${message}</p>`, mode: 'confirm' });
