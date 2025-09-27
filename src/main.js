@@ -7,6 +7,9 @@ const state = {
   activeListId: null,
   session: null,
   awaitingContinue: false,
+  streak: 0,
+  lastPrompt: null,
+  advanceTimer: null,
 };
 
 const els = {};
@@ -80,6 +83,15 @@ function cacheEls() {
   els.answerInputArea = $('#answer-input-area');
   els.btnShowAnswer = $('#btn-show-answer');
   els.feedback = $('#feedback');
+  // Redesigned study stats
+  els.progressBarInner = $('#progress-bar-inner');
+  els.chipAttempts = $('#chip-attempts');
+  els.chipAccuracy = $('#chip-accuracy');
+  els.chipStreak = $('#chip-streak');
+  els.sessionPlaceholder = $('#session-placeholder');
+  // New collapse toggle + config container
+  els.toggleSetup = $('#toggle-setup');
+  els.studyConfig = $('#study-config');
 
   // Inline JSON import only (OCR & built-ins removed)
   els.importFile = $('#import-file');
@@ -103,6 +115,11 @@ function wireTabs() {
       tab.classList.add('active');
       const id = `panel-${tab.dataset.tab}`;
       document.getElementById(id).classList.add('active');
+      if (tab.dataset.tab === 'study') {
+        document.body.classList.add('in-study');
+      } else {
+        document.body.classList.remove('in-study');
+      }
     });
   });
 }
@@ -252,6 +269,7 @@ function wireStudyPanel() {
       return;
     }
     if (result.correct) {
+      // auto-advance after 500ms
       nextQuestionSoon(true);
     } else {
       // Pause flow until user clicks Continue
@@ -266,30 +284,80 @@ function wireStudyPanel() {
       els.contentTabs.forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       updateDirectionLabel();
+      updateSynAntVisibility();
     });
   });
 
   // Settings open/close
-  els.btnSettings.addEventListener('click', () => {
-    els.settingsPanel.classList.toggle('hidden');
-  });
+  if (els.btnSettings && els.settingsPanel) {
+    els.btnSettings.addEventListener('click', () => {
+      els.settingsPanel.classList.toggle('hidden');
+    });
+  }
   // Direction toggle: Match ____ to Word / Match Word to ____
-  let directionState = 'toWord'; // 'toWord' or 'toAnswer'
+  let directionState = 'toWord'; // force for spelling
   const updateDirectionLabel = () => {
     const content = currentContentType();
+    if (content === 'spelling') directionState = 'toWord';
     const placeholder = contentTitle(content);
     if (directionState === 'toWord') {
       els.directionLabel.innerHTML = `Match <span>${escapeHtml(placeholder)}</span> to Word`;
     } else {
       els.directionLabel.innerHTML = `Match Word to <span>${escapeHtml(placeholder)}</span>`;
     }
+    if (content === 'spelling') {
+      els.directionLabel.setAttribute('disabled','disabled');
+      els.directionLabel.classList.add('disabled');
+    } else {
+      els.directionLabel.removeAttribute('disabled');
+      els.directionLabel.classList.remove('disabled');
+    }
   };
   els.directionLabel.addEventListener('click', () => {
+    const content = currentContentType();
+    if (content === 'spelling') return; // locked
     directionState = directionState === 'toWord' ? 'toAnswer' : 'toWord';
     updateDirectionLabel();
   });
   // Initialize label
   updateDirectionLabel();
+  updateSynAntVisibility();
+
+  // Collapse setup controls
+  // Floating collapse toggle button (slides config left by toggling .compact)
+  if (els.toggleSetup && els.studyConfig) {
+    const updateToggleA11y = () => {
+      const collapsed = document.body.classList.contains('study-config-collapsed');
+      els.toggleSetup.setAttribute('aria-expanded', String(!collapsed));
+      els.toggleSetup.setAttribute('aria-label', collapsed ? 'Show setup' : 'Hide setup');
+      els.toggleSetup.title = collapsed ? 'Show setup' : 'Hide setup';
+      const eye = els.toggleSetup.querySelector('.collapse-icon-eye');
+      const eyeOff = els.toggleSetup.querySelector('.collapse-icon-eye-off');
+      if (eye && eyeOff) {
+        if (collapsed) {
+          eye.classList.add('hidden');
+          eyeOff.classList.remove('hidden');
+        } else {
+          eye.classList.remove('hidden');
+          eyeOff.classList.add('hidden');
+        }
+      }
+    };
+    const toggle = () => {
+      const collapsed = document.body.classList.toggle('study-config-collapsed');
+      if (collapsed) {
+        els.studyConfig.classList.add('compact');
+      } else {
+        els.studyConfig.classList.remove('compact');
+      }
+      updateToggleA11y();
+    };
+    updateToggleA11y();
+    els.toggleSetup.addEventListener('click', toggle);
+    els.toggleSetup.addEventListener('keydown', (e) => {
+      if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggle(); }
+    });
+  }
 }
 
 
@@ -648,31 +716,56 @@ function startSession() {
   };
   state.session = new StudyEngine(pool, options, state.lists);
   els.session.classList.remove('hidden');
+  if (els.sessionPlaceholder) els.sessionPlaceholder.classList.add('hidden');
   els.feedback.innerHTML = '';
   state.awaitingContinue = false;
+  state.streak = 0;
+  updateStatsChips();
   nextQuestion(true);
   renderProgress();
+  // Toggle start/end buttons
+  if (els.btnStartStudy) els.btnStartStudy.classList.add('hidden');
+  if (els.btnEndSession) els.btnEndSession.classList.remove('hidden');
 }
 
 function endSession() {
   if (!state.session) return;
   state.session = null;
   els.session.classList.add('hidden');
+  if (els.sessionPlaceholder) els.sessionPlaceholder.classList.remove('hidden');
+  // Restore buttons
+  if (els.btnEndSession) els.btnEndSession.classList.add('hidden');
+  if (els.btnStartStudy) els.btnStartStudy.classList.remove('hidden');
 }
 
 function nextQuestion(initial = false) {
   if (!state.session) return;
   const q = state.session.next();
+  if (!q || q.type === 'done') { renderSessionSummary(); return; }
+  // Only clear feedback automatically when coming from a correct answer auto-advance, not when first loading or after an incorrect (Continue clears it)
+  if (!initial && !state.awaitingContinue) {
+    els.feedback.innerHTML = '';
+  }
   renderQuestion(q);
-  if (!initial) els.feedback.innerHTML = '';
 }
 
 function nextQuestionSoon(correct) {
-  setTimeout(() => nextQuestion(), correct ? 300 : 600);
+  // correct -> 500ms, incorrect path managed by Continue button
+  const delay = correct ? 500 : 600;
+  if (state.advanceTimer) clearTimeout(state.advanceTimer);
+  const before = state.lastPrompt;
+  state.advanceTimer = setTimeout(() => {
+    // If still on the same prompt (hasn't advanced some other way) then advance
+    if (!state.awaitingContinue) {
+      const currentHtml = els.prompt.innerHTML;
+      if (before === currentHtml) nextQuestion();
+    }
+  }, delay);
 }
 
 function renderQuestion(q) {
   els.prompt.innerHTML = q.promptHtml;
+  state.lastPrompt = q.promptHtml;
   els.answerInputArea.innerHTML = '';
     if (els.btnShowAnswer && els.btnShowAnswer.classList) els.btnShowAnswer.classList.remove('hidden');
   if (q.type === 'input') {
@@ -694,6 +787,9 @@ function renderQuestion(q) {
       label.innerHTML = `<input id="${id}" type="radio" name="mc" value="${i}"><span>${escapeHtml(choice)}</span>`;
       els.answerInputArea.appendChild(label);
     });
+    // Focus first choice for accessibility
+    const first = els.answerInputArea.querySelector('input[type="radio"]');
+    if (first) first.focus();
   }
 }
 
@@ -714,37 +810,107 @@ function renderFeedback(result) {
   if (!result) return;
   if (result.correct) {
     els.feedback.innerHTML = `<div class="correct">Correct!</div>`;
-  } else {
-    const expected = escapeHtml(result.expected);
-    const your = escapeHtml(result.your || '(no answer)');
-    let extra = '';
-    if (result.mode && (result.mode.startsWith('synonym') || result.mode.startsWith('antonym'))) {
-      if (result.wordDefinition) {
-        extra = `<br/><small>Definition of ${escapeHtml(result.word)}: ${escapeHtml(result.wordDefinition)}</small>`;
-      }
-    }
-    els.feedback.innerHTML = `<div class="incorrect">Incorrect. Expected: ${expected}<br/>Your answer: ${your}${extra}</div>`;
+    state.streak += 1;
+    updateStatsChips();
+    return;
   }
+  // Incorrect flow
+  state.streak = 0;
+  const expected = escapeHtml(result.expected);
+  const your = escapeHtml(result.your || '(no answer)');
+  // Determine additional info
+  let extraBlock = '';
+  const isDefMode = result.mode && result.mode.startsWith('definition');
+  const isSynAnt = result.mode && (result.mode.startsWith('synonym') || result.mode.startsWith('antonym'));
+  if (isDefMode || isSynAnt) {
+    const wrongDef = lookupWordDefinition(result.your);
+    const correctDef = lookupWordDefinition(result.expected);
+    const parts = [];
+    if (correctDef) parts.push(`<div class=\"extra-def\"><strong>${expected}</strong>: ${escapeHtml(correctDef)}</div>`);
+    if (wrongDef) parts.push(`<div class=\"extra-def\"><strong>${your}</strong>: ${escapeHtml(wrongDef)}</div>`);
+    extraBlock = parts.join('');
+  }
+  // Only show definition blocks (no redundant labels)
+  els.feedback.innerHTML = `<div class=\"incorrect\">${extraBlock || 'Incorrect.'}</div>`;
+  // For MC highlight choices
+  if (result.selectedIndex !== undefined && result.selectedIndex >= 0) {
+    highlightChoices(result);
+  }
+  // Replace submit button area with Continue
+  const submitBtn = els.answerForm.querySelector('button[type="submit"]');
+  if (submitBtn) {
+    submitBtn.classList.add('hidden');
+    // Inject a temporary continue button in its place
+    let inlineHolder = els.answerForm.querySelector('.answer-actions .temp-continue');
+    if (!inlineHolder) {
+      inlineHolder = document.createElement('div');
+      inlineHolder.className = 'temp-continue';
+      submitBtn.parentElement.insertBefore(inlineHolder, submitBtn); // before hidden submit
+    } else {
+      inlineHolder.innerHTML = '';
+    }
+    const cont = document.createElement('button');
+    cont.type = 'button';
+    cont.textContent = 'Continue';
+    cont.className = 'primary';
+    inlineHolder.appendChild(cont);
+    cont.focus();
+    cont.addEventListener('click', () => {
+      inlineHolder.remove();
+      submitBtn.classList.remove('hidden');
+      state.awaitingContinue = false;
+      nextQuestion();
+    });
+  }
+  updateStatsChips();
+}
+
+function lookupWordDefinition(wordPlain) {
+  if (!wordPlain) return '';
+  const lower = wordPlain.trim().toLowerCase();
+  for (const l of state.lists) {
+    const found = l.words.find(w => (w.word || '').toLowerCase() === lower);
+    if (found) return found.definition || '';
+  }
+  return '';
+}
+
+function highlightChoices(result) {
+  const labels = $all('.mc-choice');
+  labels.forEach((lbl, idx) => {
+    const input = lbl.querySelector('input');
+    if (!input) return;
+    if (idx === result.answerIndex) lbl.classList.add('choice-correct');
+    if (idx === result.selectedIndex && result.selectedIndex !== result.answerIndex) lbl.classList.add('choice-wrong');
+    input.disabled = true;
+  });
 }
 
 function showContinueButton(onContinue) {
-  // Render a Continue button below feedback; disable form inputs
+  $all('input', els.answerInputArea).forEach(i => i.disabled = true);
+  els.answerForm.classList.add('awaiting-continue');
+  if (els.btnShowAnswer && els.btnShowAnswer.classList) els.btnShowAnswer.classList.add('hidden');
+  const submitBtn = els.answerForm.querySelector('button[type="submit"]');
+  if (!submitBtn) return;
+  let holder = els.answerForm.querySelector('.answer-actions .temp-continue');
+  if (!holder) {
+    holder = document.createElement('div');
+    holder.className = 'temp-continue';
+    submitBtn.parentElement.insertBefore(holder, submitBtn);
+  } else {
+    holder.innerHTML = '';
+  }
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.textContent = 'Continue';
   btn.className = 'primary';
-  // Prevent selecting new MC options until continue
-  $all('input', els.answerInputArea).forEach(i => i.disabled = true);
-  if (els.btnShowAnswer && els.btnShowAnswer.classList) {
-    els.btnShowAnswer.classList.add('hidden');
-  }
-  const wrapper = document.createElement('div');
-  wrapper.style.marginTop = '8px';
-  wrapper.appendChild(btn);
-  els.feedback.appendChild(wrapper);
+  holder.appendChild(btn);
+  submitBtn.classList.add('hidden');
+  btn.focus();
   btn.addEventListener('click', () => {
-    // Clean up and proceed
-    wrapper.remove();
+    holder.remove();
+    submitBtn.classList.remove('hidden');
+    els.answerForm.classList.remove('awaiting-continue');
     if (typeof onContinue === 'function') onContinue();
   });
 }
@@ -752,7 +918,17 @@ function showContinueButton(onContinue) {
 function renderProgress() {
   if (!state.session) return;
   const { answered, total, infinite } = state.session.progress();
-  els.progressText.textContent = infinite ? `${answered} / ∞` : `${answered} / ${total}`;
+  if (els.progressText) {
+    els.progressText.textContent = infinite ? `${answered} / ∞` : `${answered} / ${total}`;
+  }
+  if (els.progressBarInner && total) {
+    const pct = Math.min(100, (answered / total) * 100);
+    els.progressBarInner.style.width = `${pct}%`;
+  } else if (els.progressBarInner && !total) {
+    // infinite session: animate subtle pulse
+    els.progressBarInner.style.width = '100%';
+    els.progressBarInner.style.animation = 'progressPulse 3s linear infinite';
+  }
 }
 
 function renderSessionSummary() {
@@ -764,6 +940,36 @@ function renderSessionSummary() {
       Attempts: ${summary.attempts} • Correct: ${summary.correct} • Accuracy: ${(summary.accuracy * 100).toFixed(0)}%
     </div>
   `;
+  updateStatsChips();
+}
+
+function updateStatsChips() {
+  if (!state.session) {
+    if (els.chipAttempts) els.chipAttempts.textContent = '0';
+    if (els.chipAccuracy) els.chipAccuracy.textContent = '0%';
+    if (els.chipStreak) els.chipStreak.textContent = '0';
+    return;
+  }
+  const summary = state.session.summary ? state.session.summary() : { attempts: 0, correct: 0, accuracy: 0 };
+  if (els.chipAttempts) els.chipAttempts.textContent = String(summary.attempts);
+  if (els.chipAccuracy) {
+    const pct = (summary.accuracy * 100).toFixed(0) + '%';
+    els.chipAccuracy.textContent = pct;
+    const parent = els.chipAccuracy.closest('.chip-stat');
+    if (parent) {
+      parent.classList.remove('good','warn','bad');
+      const a = summary.accuracy;
+      if (a >= 0.85) parent.classList.add('good'); else if (a >= 0.6) parent.classList.add('warn'); else parent.classList.add('bad');
+    }
+  }
+  if (els.chipStreak) {
+    els.chipStreak.textContent = String(state.streak);
+    const parent = els.chipStreak.closest('.chip-stat');
+    if (parent) {
+      parent.classList.remove('good','warn','bad');
+      if (state.streak >= 10) parent.classList.add('good'); else if (state.streak >=5) parent.classList.add('warn');
+    }
+  }
 }
 
 function escapeHtml(s = '') { return s.replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
@@ -775,6 +981,8 @@ function currentContentType() {
 function currentDirection() {
   // read from label text to stay in sync with UI logic
   // But we tracked state internally, so infer based on label text
+  const content = currentContentType();
+  if (content === 'spelling') return 'toWord';
   const txt = els.directionLabel.textContent || '';
   return txt.includes('to Word') ? 'toWord' : 'toAnswer';
 }
@@ -791,6 +999,17 @@ function contentTitle(content) {
       return 'Antonym';
     default:
       return 'Answer';
+  }
+}
+
+function updateSynAntVisibility() {
+  const wrapper = document.getElementById('syn-ant-wrapper');
+  if (!wrapper) return;
+  const c = currentContentType();
+  if (c === 'synonym' || c === 'antonym') {
+    wrapper.classList.remove('hidden');
+  } else {
+    wrapper.classList.add('hidden');
   }
 }
 

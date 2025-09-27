@@ -119,12 +119,14 @@ export class StudyEngine {
     const { w, mode, expectedPlain, answerIndex } = this.current;
     let correct = false;
     let your = '';
+    let selectedIndex = -1;
     if (this.current.q.type === 'input' && answer.kind === 'text') {
       your = answer.value;
       correct = normalize(your) === normalize(expectedPlain);
     } else if (this.current.q.type === 'mc' && answer.kind === 'mc') {
       your = this.current.q.choices[answer.value] || '';
       correct = answer.value === answerIndex;
+      selectedIndex = answer.value;
     }
 
   this._recordResult(w, mode, correct);
@@ -148,7 +150,9 @@ export class StudyEngine {
       your,
       mode,
       word: w.word,
-      wordDefinition: w.definition || ''
+      wordDefinition: w.definition || '',
+      answerIndex,
+      selectedIndex
     };
   }
 
