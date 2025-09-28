@@ -10,6 +10,9 @@ const state = {
   streak: 0,
   lastPrompt: null,
   advanceTimer: null,
+  // Session restart tracking
+  sessionStartSettings: null,
+  settingsChanged: false,
 };
 
 const els = {};
@@ -286,7 +289,16 @@ function wireListPanel() {
 
 function wireStudyPanel() {
   els.btnStartStudy.addEventListener('click', () => startSession());
-  els.btnEndSession.addEventListener('click', () => endSession());
+  els.btnEndSession.addEventListener('click', () => {
+    if (state.settingsChanged) {
+      // Restart with new settings
+      endSession();
+      startSession();
+    } else {
+      // Normal end session
+      endSession();
+    }
+  });
   els.btnShowAnswer.addEventListener('click', () => showCurrentAnswer());
   els.answerForm.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -305,7 +317,7 @@ function wireStudyPanel() {
     } else {
       // Pause flow until user clicks Continue
       state.awaitingContinue = true;
-      showContinueButton(() => { state.awaitingContinue = false; nextQuestion(); });
+      showContinueButton(() => { state.awaitingContinue = false; nextQuestion(false, true); });
     }
   });
 
@@ -316,6 +328,7 @@ function wireStudyPanel() {
       tab.classList.add('active');
       updateDirectionLabel();
       updateSynAntVisibility();
+      updateButtonForSettingsChange(); // Check for settings change
     });
   });
 
@@ -349,10 +362,28 @@ function wireStudyPanel() {
     if (content === 'spelling') return; // locked
     directionState = directionState === 'toWord' ? 'toAnswer' : 'toWord';
     updateDirectionLabel();
+    updateButtonForSettingsChange(); // Check for settings change
   });
   // Initialize label
   updateDirectionLabel();
   updateSynAntVisibility();
+
+  // Add settings change listeners
+  if (els.sessionMode) {
+    els.sessionMode.addEventListener('change', updateButtonForSettingsChange);
+  }
+  if (els.synAntPrompt) {
+    els.synAntPrompt.addEventListener('change', updateButtonForSettingsChange);
+  }
+  
+  // Listen for changes to study list selection
+  if (els.studyListChips) {
+    els.studyListChips.addEventListener('change', (e) => {
+      if (e.target.type === 'checkbox') {
+        updateButtonForSettingsChange();
+      }
+    });
+  }
 
   // Collapse setup controls
   // Floating collapse toggle button (slides config left by toggling .compact)
@@ -543,11 +574,17 @@ function closeOtherMenus(current) {
   }
 }
 
-// Global handlers for closing list action menus
+// Global handlers for closing list action menus and word menus
 document.addEventListener('click', (e) => {
   if (!e.target.closest('.menu-wrap')) closeOtherMenus(null);
+  if (!e.target.closest('.word-menu-wrap')) closeWordMenus();
 });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeOtherMenus(null); });
+document.addEventListener('keydown', (e) => { 
+  if (e.key === 'Escape') {
+    closeOtherMenus(null);
+    closeWordMenus();
+  }
+});
 
 function handleCardMenu(list, act) {
   switch (act) {
@@ -571,6 +608,43 @@ function handleCardMenu(list, act) {
         closeOtherMenus(null);
       });
       break;
+  }
+}
+
+function closeWordMenus() {
+  if (els.wordsTbody) {
+    els.wordsTbody.querySelectorAll('.word-menu').forEach(menu => {
+      menu.classList.add('hidden');
+    });
+  }
+}
+
+function handleWordMenuAction(word, action) {
+  const list = activeList();
+  if (!list || !word) return;
+  
+  if (action === 'edit') {
+    openWordModal(word);
+  } else if (action === 'duplicate') {
+    const duplicated = JSON.parse(JSON.stringify(word));
+    duplicated.word = `${duplicated.word} (copy)`;
+    list.words.push(duplicated);
+    save();
+    renderWords();
+    renderLists();
+  } else if (action === 'delete') {
+    appConfirm('Delete Word', `Delete "${escapeHtml(word.word)}"?`).then(ok => {
+      if (ok) {
+        const idx = list.words.findIndex(w => w.word === word.word);
+        if (idx >= 0) {
+          list.words.splice(idx, 1);
+          save();
+          renderWords();
+          renderLists();
+          updateDetailHeader();
+        }
+      }
+    });
   }
 }
 
@@ -619,12 +693,66 @@ function renderWords() {
       tr.innerHTML = `
         <td><strong>${escapeHtml(w.word)}</strong><br/><small>${escapeHtml(w.example || '')}</small></td>
         <td>${escapeHtml(w.definition)}</td>
-  <td>${escapeHtml(Array.isArray(w.synonyms) ? w.synonyms.join(', ') : '')}</td>
-  <td>${escapeHtml(Array.isArray(w.antonyms) ? w.antonyms.join(', ') : '')}</td>
+        <td>${escapeHtml(Array.isArray(w.synonyms) ? w.synonyms.join(', ') : '')}</td>
+        <td>${escapeHtml(Array.isArray(w.antonyms) ? w.antonyms.join(', ') : '')}</td>
+        <td class="word-menu-cell">
+          <div class="word-menu-wrap">
+            <button class="icon-btn small word-menu-btn" aria-label="Word actions" title="Word actions" data-word="${escapeHtml(w.word)}">
+              <svg class="icon" aria-hidden="true"><use href="#icon-menu"/></svg>
+            </button>
+            <div class="word-menu hidden" role="menu">
+              <button data-act="edit" role="menuitem">Edit</button>
+              <button data-act="duplicate" role="menuitem">Duplicate</button>
+              <button data-act="delete" class="danger" role="menuitem">Delete</button>
+            </div>
+          </div>
+        </td>
       `;
-      tr.addEventListener('click', () => openWordModal(w));
       els.wordsTbody.appendChild(tr);
     });
+  
+  // Add event listeners for word menus
+  els.wordsTbody.querySelectorAll('.word-menu-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const menu = btn.nextElementSibling;
+      const wordText = btn.getAttribute('data-word');
+      const word = list.words.find(w => w.word === wordText);
+      
+      // Close other menus
+      els.wordsTbody.querySelectorAll('.word-menu').forEach(m => {
+        if (m !== menu) m.classList.add('hidden');
+      });
+      
+      // Toggle this menu
+      menu.classList.toggle('hidden');
+      
+      // Smart positioning to avoid cutoff
+      if (!menu.classList.contains('hidden')) {
+        const btnRect = btn.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const menuHeight = 120; // Approximate menu height
+        const spaceBelow = viewportHeight - btnRect.bottom;
+        
+        // If there's not enough space below, position above
+        if (spaceBelow < menuHeight && btnRect.top > menuHeight) {
+          menu.classList.add('position-up');
+        } else {
+          menu.classList.remove('position-up');
+        }
+      }
+      
+      // Handle menu actions
+      menu.querySelectorAll('[data-act]').forEach(actionBtn => {
+        actionBtn.onclick = (e) => {
+          e.stopPropagation();
+          handleWordMenuAction(word, actionBtn.getAttribute('data-act'));
+          menu.classList.add('hidden');
+        };
+      });
+    });
+  });
+  
   updateDetailHeader();
 }
 
@@ -747,6 +875,11 @@ function startSession() {
     sessionMode: els.sessionMode.value, // learning | normal | test
     synAntPrompt: (els.synAntPrompt && els.synAntPrompt.value) ? els.synAntPrompt.value : 'random', // random | all
   };
+  
+  // Capture initial settings for change detection
+  state.sessionStartSettings = captureCurrentSettings();
+  state.settingsChanged = false;
+  
   state.session = new StudyEngine(pool, options, state.lists);
   els.session.classList.remove('hidden');
   if (els.sessionPlaceholder) els.sessionPlaceholder.classList.add('hidden');
@@ -781,16 +914,27 @@ function endSession() {
   const pbWrap = document.getElementById('progress-bar-wrap');
   if (pbWrap) { pbWrap.classList.add('hidden'); pbWrap.setAttribute('aria-hidden','true'); }
   // Restore buttons
-  if (els.btnEndSession) els.btnEndSession.classList.add('hidden');
+  if (els.btnEndSession) {
+    els.btnEndSession.classList.add('hidden');
+    // Reset button state to original
+    els.btnEndSession.textContent = 'End';
+    els.btnEndSession.setAttribute('aria-label', 'End Session');
+    els.btnEndSession.classList.remove('primary');
+    els.btnEndSession.classList.add('danger');
+  }
   if (els.btnStartStudy) els.btnStartStudy.classList.remove('hidden');
+  
+  // Reset session restart tracking
+  state.sessionStartSettings = null;
+  state.settingsChanged = false;
 }
 
-function nextQuestion(initial = false) {
+function nextQuestion(initial = false, clearFeedback = true) {
   if (!state.session) return;
   const q = state.session.next();
   if (!q || q.type === 'done') { renderSessionSummary(); return; }
-  // Only clear feedback automatically when coming from a correct answer auto-advance, not when first loading or after an incorrect (Continue clears it)
-  if (!initial && !state.awaitingContinue) {
+  // Only clear feedback when explicitly requested and not on initial load
+  if (!initial && clearFeedback) {
     els.feedback.innerHTML = '';
   }
   renderQuestion(q);
@@ -805,7 +949,7 @@ function nextQuestionSoon(correct) {
     // If still on the same prompt (hasn't advanced some other way) then advance
     if (!state.awaitingContinue) {
       const currentHtml = els.prompt.innerHTML;
-      if (before === currentHtml) nextQuestion();
+      if (before === currentHtml) nextQuestion(false, true);
     }
   }, delay);
 }
@@ -865,20 +1009,14 @@ function renderFeedback(result) {
   state.streak = 0;
   const expected = escapeHtml(result.expected);
   const your = escapeHtml(result.your || '(no answer)');
-  // Determine additional info
-  let extraBlock = '';
-  const isDefMode = result.mode && result.mode.startsWith('definition');
-  const isSynAnt = result.mode && (result.mode.startsWith('synonym') || result.mode.startsWith('antonym'));
-  if (isDefMode || isSynAnt) {
-    const wrongDef = lookupWordDefinition(result.your);
-    const correctDef = lookupWordDefinition(result.expected);
-    const parts = [];
-    if (correctDef) parts.push(`<div class=\"extra-def\"><strong>${expected}</strong>: ${escapeHtml(correctDef)}</div>`);
-    if (wrongDef) parts.push(`<div class=\"extra-def\"><strong>${your}</strong>: ${escapeHtml(wrongDef)}</div>`);
-    extraBlock = parts.join('');
-  }
-  // Only show definition blocks (no redundant labels)
-  els.feedback.innerHTML = `<div class=\"incorrect\">${extraBlock || 'Incorrect.'}</div>`;
+  
+  // Get word data for comprehensive feedback
+  const wordData = getWordData(result.word);
+  
+  // Generate comprehensive feedback based on mode
+  let extraBlock = generateModeSpecificFeedback(result, wordData, expected, your);
+  
+  els.feedback.innerHTML = `<div class="incorrect">${extraBlock || 'Incorrect.'}</div>`;
   // For MC highlight choices
   if (result.selectedIndex !== undefined && result.selectedIndex >= 0) {
     highlightChoices(result);
@@ -906,7 +1044,7 @@ function renderFeedback(result) {
       inlineHolder.remove();
       submitBtn.classList.remove('hidden');
       state.awaitingContinue = false;
-      nextQuestion();
+      nextQuestion(false, true);
     });
   }
   updateStatsChips();
@@ -920,6 +1058,166 @@ function lookupWordDefinition(wordPlain) {
     if (found) return found.definition || '';
   }
   return '';
+}
+
+function getWordData(wordPlain) {
+  if (!wordPlain) return null;
+  const lower = wordPlain.trim().toLowerCase();
+  for (const l of state.lists) {
+    const found = l.words.find(w => (w.word || '').toLowerCase() === lower);
+    if (found) return found;
+  }
+  return null;
+}
+
+function findWordByDefinition(definition) {
+  if (!definition) return null;
+  const defLower = definition.trim().toLowerCase();
+  for (const l of state.lists) {
+    const found = l.words.find(w => (w.definition || '').toLowerCase() === defLower);
+    if (found) return found.word;
+  }
+  return null;
+}
+
+function findWordBySynonym(synonym) {
+  if (!synonym) return null;
+  const synLower = synonym.trim().toLowerCase();
+  for (const l of state.lists) {
+    const found = l.words.find(w => 
+      Array.isArray(w.synonyms) && 
+      w.synonyms.some(s => s.toLowerCase() === synLower)
+    );
+    if (found) return found.word;
+  }
+  return null;
+}
+
+function findWordByAntonym(antonym) {
+  if (!antonym) return null;
+  const antLower = antonym.trim().toLowerCase();
+  for (const l of state.lists) {
+    const found = l.words.find(w => 
+      Array.isArray(w.antonyms) && 
+      w.antonyms.some(a => a.toLowerCase() === antLower)
+    );
+    if (found) return found.word;
+  }
+  return null;
+}
+
+// Feedback templates with placeholders
+const FEEDBACK_TEMPLATES = {
+  spelling_toWord: [
+    { text: 'Correct Word: {EXPECTED}', class: 'incorrect' }
+  ],
+  spelling_toAnswer: [
+    { text: 'Correct Word: {EXPECTED}', class: 'correct' }
+  ],
+  definition_toWord: [
+    { text: '{YOUR}: {YOUR_DEF}', class: 'incorrect', condition: 'hasUserAnswer' },
+    { text: '{EXPECTED}: {CORRECT_DEF}', class: 'correct' },
+  ],
+  definition_toAnswer: [
+    { text: 'You selected: {YOUR_WORD} ({YOUR})', class: 'incorrect', condition: 'hasUserAnswer' }
+  ],
+  synonym_toAnswer: [
+    { text: 'You selected: {YOUR_SYN_WORD} ({YOUR_SYN_WORD_DEF})', class: 'incorrect', condition: 'hasUserAnswer' },
+    { text: '{WORD}: {WORD_DEF}', class: 'correct' }
+  ],
+  synonym_toWord: [
+    { text: 'You chose: {YOUR}', class: 'incorrect', condition: 'hasUserAnswer' },
+    { text: '{EXPECTED}: {CORRECT_DEF}', class: 'correct' }
+  ],
+  antonym_toAnswer: [
+    { text: 'You selected: {YOUR_ANT_WORD} ({YOUR_ANT_WORD_DEF})', class: 'incorrect', condition: 'hasUserAnswer' },
+    { text: '{WORD}: {WORD_DEF}', class: 'correct' }
+  ],
+  antonym_toWord: [
+    { text: 'You chose: {YOUR} ({YOUR_DEF})', class: 'incorrect', condition: 'hasUserAnswer' },
+    { text: '{EXPECTED}: {CORRECT_DEF}', class: 'correct' }
+  ]
+};
+
+function createFeedbackData(result, wordData, expected, your) {
+  const yourWordData = getWordData(your);
+  const yourWord = findWordByDefinition(your);
+  
+  // For synonym/antonym modes, find the word that has the selected synonym/antonym
+  const yourSynonymWord = findWordBySynonym(your);
+  const yourAntonymWord = findWordByAntonym(your);
+  const yourSynWordData = getWordData(yourSynonymWord);
+  const yourAntWordData = getWordData(yourAntonymWord);
+  
+  return {
+    EXPECTED: escapeHtml(expected),
+    YOUR: escapeHtml(your || ''),
+    WORD: escapeHtml(wordData.word || ''),
+    CORRECT_DEF: escapeHtml(wordData.definition || ''),
+    WORD_DEF: escapeHtml(wordData.definition || ''),
+    YOUR_DEF: escapeHtml(yourWordData ? yourWordData.definition : lookupWordDefinition(your) || ''),
+    YOUR_WORD: escapeHtml(yourWord || ''),
+    
+    // For synonym feedback
+    YOUR_SYN_WORD: escapeHtml(yourSynonymWord || ''),
+    YOUR_SYN_WORD_DEF: escapeHtml(yourSynWordData ? yourSynWordData.definition : ''),
+    
+    // For antonym feedback  
+    YOUR_ANT_WORD: escapeHtml(yourAntonymWord || ''),
+    YOUR_ANT_WORD_DEF: escapeHtml(yourAntWordData ? yourAntWordData.definition : ''),
+    
+    // Conditions
+    hasUserAnswer: your && your !== expected && your !== '(no answer)'
+  };
+}
+
+function replacePlaceholders(template, data) {
+  let result = template;
+  for (const [placeholder, value] of Object.entries(data)) {
+    if (typeof value === 'string') {
+      result = result.replace(new RegExp(`{${placeholder}}`, 'g'), value);
+    }
+  }
+  return result;
+}
+
+function shouldShowFeedbackLine(feedbackLine, data) {
+  if (!feedbackLine.condition) return true;
+  return data[feedbackLine.condition] === true;
+}
+
+function generateModeSpecificFeedback(result, wordData, expected, your) {
+  if (!result.mode || !wordData) return 'Incorrect.';
+  
+  const template = FEEDBACK_TEMPLATES[result.mode];
+  if (!template) {
+    return `<div class="extra-def correct"><strong>Correct answer:</strong> ${escapeHtml(expected)}</div>`;
+  }
+  
+  const data = createFeedbackData(result, wordData, expected, your);
+  const parts = [];
+  
+  template.forEach(feedbackLine => {
+    if (!shouldShowFeedbackLine(feedbackLine, data)) return;
+    
+    const text = replacePlaceholders(feedbackLine.text, data);
+    const cssClass = feedbackLine.class || 'neutral';
+    
+    // Only put text before and including colon in strong tags
+    const colonIndex = text.indexOf(':');
+    let formattedText;
+    if (colonIndex !== -1) {
+      const beforeColon = text.substring(0, colonIndex + 1);
+      const afterColon = text.substring(colonIndex + 1);
+      formattedText = `<strong>${beforeColon}</strong>${afterColon}`;
+    } else {
+      formattedText = `<strong>${text}</strong>`;
+    }
+    
+    parts.push(`<div class="extra-def ${cssClass}">${formattedText}</div>`);
+  });
+  
+  return parts.length > 0 ? parts.join('') : 'Incorrect.';
 }
 
 function highlightChoices(result) {
@@ -1032,6 +1330,42 @@ function currentDirection() {
   if (content === 'spelling') return 'toWord';
   const txt = els.directionLabel.textContent || '';
   return txt.includes('to Word') ? 'toWord' : 'toAnswer';
+}
+
+// Settings tracking for session restart
+function captureCurrentSettings() {
+  const listIds = Array.from(els.studyListChips.querySelectorAll('input[type="checkbox"]:checked')).map(c => c.dataset.id);
+  return {
+    listIds: listIds.sort(), // Sort for consistent comparison
+    contentType: currentContentType(),
+    direction: currentDirection(),
+    sessionMode: els.sessionMode.value,
+    synAntPrompt: (els.synAntPrompt && els.synAntPrompt.value) ? els.synAntPrompt.value : 'random'
+  };
+}
+
+function settingsChanged() {
+  if (!state.sessionStartSettings) return false;
+  const current = captureCurrentSettings();
+  return JSON.stringify(current) !== JSON.stringify(state.sessionStartSettings);
+}
+
+function updateButtonForSettingsChange() {
+  if (state.session && settingsChanged()) {
+    if (!state.settingsChanged) {
+      state.settingsChanged = true;
+      els.btnEndSession.textContent = 'Start Session';
+      els.btnEndSession.setAttribute('aria-label', 'Start New Session');
+      els.btnEndSession.classList.remove('danger');
+      els.btnEndSession.classList.add('primary');
+    }
+  } else if (state.settingsChanged) {
+    state.settingsChanged = false;
+    els.btnEndSession.textContent = 'End';
+    els.btnEndSession.setAttribute('aria-label', 'End Session');
+    els.btnEndSession.classList.remove('primary');
+    els.btnEndSession.classList.add('danger');
+  }
 }
 
 function contentTitle(content) {
