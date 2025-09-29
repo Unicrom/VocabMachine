@@ -18,7 +18,7 @@ const uuid = () => crypto.randomUUID();
 // ---------- Main App ----------
 export default function App() {
   const [lists, setLists] = useState(()=> Storage.loadLists());
-  const [activeListId, setActiveListId] = useState(()=> Storage.loadActiveListId() || (Storage.loadLists()[0]?.id || null));
+  const [activeListId, setActiveListId] = useState(null);
   const [activeTab, setActiveTab] = useState('lists');
   const [listSearch, setListSearch] = useState('');
   const [wordSearch, setWordSearch] = useState('');
@@ -43,7 +43,7 @@ export default function App() {
 
   // Persist lists & activeList
   useEffect(()=> { Storage.saveLists(lists); }, [lists]);
-  useEffect(()=> { Storage.saveActiveListId(activeListId); }, [activeListId]);
+  useEffect(()=> { Storage.saveActiveListId(null); }, []);
 
   // Built-in lists merge
   useEffect(()=> { (async()=> { try { const r = await fetch('default_vocab_lists.json', {cache:'no-store'}); if(!r.ok) return; const data = await r.json(); if(!data?.lists) return; setLists(prev => {
@@ -51,7 +51,7 @@ export default function App() {
     for (const src of data.lists) { const ex = nameMap.get(src.name); if(!ex) { merged.push({ id: uuid(), name: src.name, words: src.words||[], stats:{} }); changed=true; } }
     return changed? merged: prev; }); } catch(e) { /* silent */ } })(); }, []);
 
-  const activeList = lists.find(l => l.id === activeListId) || lists[0] || null;
+  const activeList = activeListId ? lists.find(l => l.id === activeListId) || null : null;
 
   // Settings capture & change detection
   const captureSettings = () => ({ listIds: selectedListIds.slice().sort(), content, direction, sessionMode, synAntPrompt });
