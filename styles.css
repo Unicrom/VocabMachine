@@ -27,7 +27,7 @@
 * { box-sizing: border-box; }
 html { font-size: 18px; }
 html, body { height: 100%; }
-body {
+body, #root {
   margin: 0;
   font: var(--fs-md)/1.5 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
   color: var(--text);
@@ -39,7 +39,7 @@ body {
 }
 
 .app-header {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 10;
+  position: sticky; top: 0; z-index: 10; /* Sticky header within flex column */
   background: #0b1023cc;
   backdrop-filter: blur(6px);
   border-bottom: 1px solid var(--border);
@@ -55,7 +55,8 @@ body {
 }
 .tab.active, .tab:hover { border-color: var(--primary); color: var(--text-strong); }
 
-main { padding: 90px clamp(12px,3vw,32px) 20px; margin: 0 auto; flex: 1; width: 100%;}
+/* Main no longer needs large top padding because header is sticky (not fixed) */
+main { padding: 24px clamp(12px,3vw,32px) 20px; margin: 0 auto; flex: 1; width: 100%; }
 .panel { display: none; }
 .panel.active { display: block; }
 .panel-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -108,7 +109,11 @@ button.danger { border-color: transparent; background: linear-gradient(180deg, #
 button:disabled { opacity: 0.6; cursor: not-allowed; }
 button.icon-btn { padding: 8px; display: inline-flex; align-items: center; justify-content: center; min-width: 0; }
 button.icon-btn span { pointer-events: none; }
-button.icon-btn .icon, .floating-settings .icon { width: 22px; height: 22px; fill: currentColor; display: block; }
+/* Allow icon sizing for both button and summary elements using icon-btn */
+button.icon-btn .icon, summary.icon-btn .icon, .icon-btn .icon, .floating-settings .icon { width: 22px; height: 22px; fill: currentColor; display: block; }
+/* Remove default disclosure triangle from summary used as menu trigger */
+summary.icon-btn { list-style: none; }
+summary.icon-btn::-webkit-details-marker { display: none; }
 .floating-settings .icon { width: 22px; height: 22px; }
 
 /* Visually hide native selection controls; we'll style wrappers */
@@ -181,6 +186,8 @@ input[type="radio"], input[type="checkbox"] {
   backdrop-filter: blur(6px); 
   border-top: 1px solid var(--border);
   flex-shrink: 0;
+  /* Push footer to bottom when main content is short */
+  margin-top: auto;
 }
 body.in-study .app-footer { display: none; }
 /* Utility */
@@ -321,7 +328,10 @@ body:not(.study-config-collapsed) .collapse-toggle .collapse-icon-eye-off { opac
 .mc-choice.choice-correct span { background: rgba(0,160,90,0.18); border-color: var(--ok); }
 .mc-choice.choice-wrong span { background: rgba(200,30,50,0.22); border-color: var(--danger); }
 .mc-choice.choice-correct span, .mc-choice.choice-wrong span { font-weight: 600; }
-.answer-actions { position: relative; }
+/* Intensify highlight after answer lock */
+.mc-choice.choice-correct span { box-shadow: 0 0 0 1px var(--ok), 0 2px 6px -3px rgba(0,160,90,.5); }
+.mc-choice.choice-wrong span { box-shadow: 0 0 0 1px var(--danger), 0 2px 6px -3px rgba(200,30,50,.55); }
+.answer-actions { position: relative; display: flex; align-items: center; gap: 10px; }
 .answer-actions .temp-continue { display: inline-block; }
 .continue-bar { margin-top: 10px; display: flex; justify-content: flex-end; }
 .continue-bar button { min-width: 120px; }

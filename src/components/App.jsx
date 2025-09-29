@@ -22,7 +22,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('lists');
   const [listSearch, setListSearch] = useState('');
   const [wordSearch, setWordSearch] = useState('');
-  const [listSortMode, setListSortMode] = useState('created'); // 'created' | 'alpha'
+  // Lists now always sorted alphabetically by name; removed listSortMode toggle
   const [dialog, setDialog] = useState(null);
   const [wordModalOpen, setWordModalOpen] = useState(false);
   const [wordEditing, setWordEditing] = useState(null);
@@ -40,6 +40,8 @@ export default function App() {
   const [startSettings, setStartSettings] = useState(null);
   const [mcSelection, setMcSelection] = useState(-1);
   const [configCollapsed, setConfigCollapsed] = useState(false);
+  const [correctMcIndex, setCorrectMcIndex] = useState(-1); // highlight correct MC choice on incorrect answer
+  const [lockedAnswer, setLockedAnswer] = useState(false);   // prevents changing answer after submission until next question
 
   // Persist lists & activeList
   useEffect(()=> { Storage.saveLists(lists); }, [lists]);
@@ -111,14 +113,26 @@ export default function App() {
   const updateStats = (engine) => { if(!engine){ setStats({attempts:0,correct:0,accuracy:'0'}); return; } const s=engine.summary(); setStats({ attempts: s.attempts, correct: s.correct, accuracy: (s.accuracy*100).toFixed(0) }); };
 
   const nextQuestion = useCallback((initial=false, clearFeedback=true)=> {
-    if(!session) return; const q = session.next(); if(!q || q.type==='done'){ // summary
-      const s = session.summary(); setFeedbackHtml(`<div><strong>Session complete.</strong><br/>Attempts: ${s.attempts} • Correct: ${s.correct} • Accuracy: ${(s.accuracy*100).toFixed(0)}%</div>`); updateStats(session); setSession(s2=>s2); return; }
-    setCurrentQuestion(q); if(!initial && clearFeedback) setFeedbackHtml('');
+    if(!session) return;
+    const q = session.next();
+    if(!q || q.type==='done'){ // summary
+      const s = session.summary();
+      setFeedbackHtml(`<div><strong>Session complete.</strong><br/>Attempts: ${s.attempts} • Correct: ${s.correct} • Accuracy: ${(s.accuracy*100).toFixed(0)}%</div>`);
+      updateStats(session);
+      setSession(s2=>s2);
+      return;
+    }
+    // Reset per-question UI state
+    setLockedAnswer(false);
+    setCorrectMcIndex(-1);
+    setMcSelection(-1);
+    setCurrentQuestion(q);
+    if(!initial && clearFeedback) setFeedbackHtml('');
   }, [session]);
 
   // Answer submission
   const submitAnswer = (e) => {
-    e.preventDefault(); if(!session || awaitingContinue) return;
+    e.preventDefault(); if(!session || awaitingContinue || lockedAnswer) return;
     const formData = new FormData(e.target); const text = formData.get('text');
     const answerObj = currentQuestion?.type==='input'? { kind:'text', value: (text||'').toString().trim() } : { kind:'mc', value: mcSelection };
     const result = session.submit(answerObj);
@@ -128,6 +142,7 @@ export default function App() {
   const handleResult = (result) => {
     updateStats(session);
     if(result.done){ handleSessionComplete(); return; }
+    setLockedAnswer(true);
     if(result.correct){ setFeedbackHtml('<div class="correct">Correct!</div>'); setStreak(s=> s+1); // auto advance
       setTimeout(()=> { nextQuestion(false,true); }, 500);
     } else {
@@ -138,6 +153,11 @@ export default function App() {
       let fbHtml = generateFeedback(result, wordData, expected, your);
       setFeedbackHtml(`<div class="incorrect">${fbHtml||'Incorrect.'}</div>`);
       setAwaitingContinue(true);
+      // For MC, compute correct index for highlighting
+      if(currentQuestion?.type==='mc') {
+        const idx = (currentQuestion.choices||[]).findIndex(c=> c===result.expected);
+        if(idx!==-1) setCorrectMcIndex(idx);
+      }
     }
   };
 
@@ -157,15 +177,25 @@ export default function App() {
   };
 
   const showAnswer = () => { if(!session) return; const ans = session.currentAnswer(); setFeedbackHtml(`<div class="incorrect">Answer: ${escapeHtml(ans.expected)}</div>`); };
-  const selectMcChoice = (i) => setMcSelection(i);
+  const selectMcChoice = (i) => { if(lockedAnswer || awaitingContinue) return; setMcSelection(i); };
 
   // Continue (when incorrect)
-  useEffect(()=> { if(awaitingContinue){ const btn = document.createElement('button'); btn.textContent='Continue'; btn.className='primary'; btn.onclick=()=> { setAwaitingContinue(false); nextQuestion(false,true); }; // Inject below feedback
-    const wrap = document.querySelector('#feedback'); if(wrap){ const holder = document.createElement('div'); holder.className='temp-continue'; holder.appendChild(btn); wrap.appendChild(holder); btn.focus(); }
-  } }, [awaitingContinue, nextQuestion]);
+  // Awaiting continue now handled inline in QuestionForm (button replaces submit)
+  useEffect(()=> {}, [awaitingContinue]);
 
   // Auto direction lock for spelling
   useEffect(()=> { if(content==='spelling') setDirection('toWord'); }, [content]);
+
+  // Handle inline Continue button custom event
+  useEffect(()=> {
+    const handler = () => {
+      if(!awaitingContinue || !session) return;
+      setAwaitingContinue(false);
+      nextQuestion(false,true);
+    };
+    window.addEventListener('vocab-continue-click', handler);
+    return ()=> window.removeEventListener('vocab-continue-click', handler);
+  }, [awaitingContinue, session, nextQuestion]);
 
   const toggleDirection = () => { if(content==='spelling') return; setDirection(d=> d==='toWord'?'toAnswer':'toWord'); };
   const toggleListSelection = (id) => { setSelectedListIds(ids=> ids.includes(id)? ids.filter(x=>x!==id): [...ids,id]); };
@@ -197,15 +227,13 @@ export default function App() {
             <div className="panel-header lists-bar">
               <input id="list-search" className="full-search" type="search" placeholder="Search lists & words…" value={listSearch} onChange={e=> setListSearch(e.target.value)} />
               <div className="lists-bar-actions" style={{display:'flex', gap:8}}>
-                <button type="button" className="icon-btn" aria-label={listSortMode==='alpha'? 'Sort by creation order':'Sort alphabetically'} title={listSortMode==='alpha'? 'Sort by creation order':'Sort alphabetically'} onClick={()=> setListSortMode(m=> m==='alpha'? 'created':'alpha')}>
-                  {listSortMode==='alpha'? 'A→Z':'#'}
-                </button>
+                {/* Sorting toggle removed: always A→Z */}
                 <button id="btn-new-list" className="primary icon-btn" aria-label="New List" title="New List" onClick={createList}><svg className="icon"><use href="#icon-add"/></svg></button>
                 <input id="import-file" type="file" accept="application/json" style={{display:'none'}} onChange={e=> { handleImport(e.target.files); e.target.value=''; }} />
                 <button id="btn-import" className="icon-btn" aria-label="Import Lists (JSON)" title="Import Lists (JSON)" onClick={()=> document.getElementById('import-file').click()}><svg className="icon"><use href="#icon-upload"/></svg></button>
               </div>
             </div>
-            <ListCards lists={lists} filter={listSearch} sortMode={listSortMode} onOpen={(id)=> setActiveListId(id)} onDuplicate={duplicateList} onExport={exportList} onDelete={deleteList} />
+            <ListCards lists={lists} filter={listSearch} onOpen={(id)=> setActiveListId(id)} onDuplicate={duplicateList} onExport={exportList} onDelete={deleteList} />
           </div>
           {activeList && (
             <div id="list-detail" className={activeList? 'list-detail': 'list-detail hidden'}>
@@ -232,7 +260,7 @@ export default function App() {
             </div>
           )}
         </section>
-        <StudyPanel lists={lists} sessionState={{ activeTab, session, awaitingContinue, feedbackHtml, stats, streak, currentQuestion, answerInputType, mcChoices, showAnswerBtnVisible: !!session && !awaitingContinue, testProgressPct, testModeActive, content, direction, sessionMode, synAntPrompt, selectedListIds, settingsChanged, configCollapsed }} actions={{ submitAnswer, showAnswer, selectMcChoice, setContent, toggleDirection, setSessionMode, setSynAntPrompt, toggleListSelection, startSession, endOrRestartSession, toggleConfigCollapse }} />
+  <StudyPanel lists={lists} sessionState={{ activeTab, session, awaitingContinue, feedbackHtml, stats, streak, currentQuestion, answerInputType, mcChoices, showAnswerBtnVisible: !!session && !awaitingContinue && !lockedAnswer, testProgressPct, testModeActive, content, direction, sessionMode, synAntPrompt, selectedListIds, settingsChanged, configCollapsed, correctMcIndex, mcSelection, lockedAnswer }} actions={{ submitAnswer, showAnswer, selectMcChoice, setContent, toggleDirection, setSessionMode, setSynAntPrompt, toggleListSelection, startSession, endOrRestartSession, toggleConfigCollapse }} />
       </main>
       <footer className="app-footer"><small>Made for personal study • Data stays on this device</small></footer>
       <WordModal open={wordModalOpen} wordEditing={wordEditing} onSave={saveWord} onDelete={deleteWord} onClose={closeWordModal} />

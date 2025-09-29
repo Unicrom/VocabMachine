@@ -1,12 +1,12 @@
 import React from 'react';
 
-export function ListCards({ lists, filter, sortMode, onOpen, onDuplicate, onExport, onDelete }) {
+export function ListCards({ lists, filter, onOpen, onDuplicate, onExport, onDelete }) {
   const lower = filter.toLowerCase();
-  let working = lists.slice();
-  if (sortMode === 'alpha') {
-    working.sort((a,b)=> a.name.localeCompare(b.name, undefined,{sensitivity:'base'}));
-  }
-  const filtered = working.filter(l => {
+  // Always sort alphabetically by list name (case-insensitive)
+  const filtered = lists
+    .slice()
+    .sort((a,b)=> a.name.localeCompare(b.name, undefined,{sensitivity:'base'}))
+    .filter(l => {
     if (l.name.toLowerCase().includes(lower)) return true;
     if (!lower) return true;
     return l.words.some(w => w.word.toLowerCase().includes(lower) || (w.definition||'').toLowerCase().includes(lower));
