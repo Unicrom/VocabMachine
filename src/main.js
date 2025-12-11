@@ -346,27 +346,18 @@ function wireStudyPanel() {
     });
   }
   // Direction toggle: Match ____ to Word / Match Word to ____
-  let directionState = 'toWord'; // force for spelling
+  let directionState = 'toWord';
   const updateDirectionLabel = () => {
     const content = currentContentType();
-    if (content === 'spelling') directionState = 'toWord';
     const placeholder = contentTitle(content);
     if (directionState === 'toWord') {
       els.directionLabel.innerHTML = `Match <span>${escapeHtml(placeholder)}</span> to Word`;
     } else {
       els.directionLabel.innerHTML = `Match Word to <span>${escapeHtml(placeholder)}</span>`;
     }
-    if (content === 'spelling') {
-      els.directionLabel.setAttribute('disabled','disabled');
-      els.directionLabel.classList.add('disabled');
-    } else {
-      els.directionLabel.removeAttribute('disabled');
-      els.directionLabel.classList.remove('disabled');
-    }
   };
   els.directionLabel.addEventListener('click', () => {
     const content = currentContentType();
-    if (content === 'spelling') return; // locked
     directionState = directionState === 'toWord' ? 'toAnswer' : 'toWord';
     updateDirectionLabel();
     updateButtonForSettingsChange(); // Check for settings change
@@ -1235,7 +1226,7 @@ const FEEDBACK_TEMPLATES = {
     { text: 'Correct Word: {EXPECTED}', class: 'incorrect' }
   ],
   spelling_toAnswer: [
-    { text: 'Correct Word: {EXPECTED}', class: 'correct' }
+    { text: 'Correct Definition: {EXPECTED}', class: 'incorrect' }
   ],
   definition_toWord: [
     { text: '{YOUR}: {YOUR_DEF}', class: 'incorrect', condition: 'hasUserAnswer' },
@@ -1448,18 +1439,14 @@ function currentContentType() {
 }
 function currentDirection() {
   // read from label text to stay in sync with UI logic
-  // But we tracked state internally, so infer based on label text
-  const content = currentContentType();
-  if (content === 'spelling') return 'toWord';
   const txt = els.directionLabel.textContent || '';
   return txt.includes('to Word') ? 'toWord' : 'toAnswer';
 }
 
 // Settings tracking for session restart
 function captureCurrentSettings() {
-  const listIds = Array.from(els.studyListChips.querySelectorAll('input[type="checkbox"]:checked')).map(c => c.dataset.id);
   return {
-    listIds: listIds.sort(), // Sort for consistent comparison
+    listIds: state.selectedStudyListIds.slice().sort(), // Sort for consistent comparison
     contentType: currentContentType(),
     direction: currentDirection(),
     sessionMode: els.sessionMode.value,
