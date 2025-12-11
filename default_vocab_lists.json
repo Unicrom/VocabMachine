@@ -332,6 +332,38 @@
         {"word":"Tennessine","definition":"Ts","example":"","synonyms":[],"antonyms":[]},
         {"word":"Oganesson","definition":"Og","example":"","synonyms":[],"antonyms":[]}
       ]
+    },
+    {
+      "name": "Polyatomics",
+      "tags": ["chemistry"],
+      "words": [
+        {"word":"Ammonium","definition":"NH₄⁺","example":"","synonyms":[],"antonyms":[]},
+        {"word":"Hydroxide","definition":"OH⁻","example":"","synonyms":[],"antonyms":[]},
+        {"word":"Nitrate","definition":"NO₃⁻","example":"","synonyms":[],"antonyms":[]},
+        {"word":"Nitrite","definition":"NO₂⁻","example":"","synonyms":[],"antonyms":[]},
+        {"word":"Sulfate","definition":"SO₄²⁻","example":"","synonyms":[],"antonyms":[]},
+        {"word":"Sulfite","definition":"SO₃²⁻","example":"","synonyms":[],"antonyms":[]},
+        {"word":"Hydrogen Sulfate","definition":"HSO₄⁻","example":"","synonyms":["Bisulfate"],"antonyms":[]},
+        {"word":"Carbonate","definition":"CO₃²⁻","example":"","synonyms":[],"antonyms":[]},
+        {"word":"Bicarbonate","definition":"HCO₃⁻","example":"","synonyms":["Hydrogen carbonate"],"antonyms":[]},
+        {"word":"Phosphate","definition":"PO₄³⁻","example":"","synonyms":[],"antonyms":[]},
+        {"word":"Phosphite","definition":"PO₃³⁻","example":"","synonyms":[],"antonyms":[]},
+        {"word":"Acetate","definition":"C₂H₃O₂⁻","example":"","synonyms":["CH₃COO⁻"],"antonyms":[]},
+        {"word":"Chlorate","definition":"ClO₃⁻","example":"","synonyms":[],"antonyms":[]},
+        {"word":"Chlorite","definition":"ClO₂⁻","example":"","synonyms":[],"antonyms":[]},
+        {"word":"Hypochlorite","definition":"ClO⁻","example":"","synonyms":[],"antonyms":[]},
+        {"word":"Perchlorate","definition":"ClO₄⁻","example":"","synonyms":[],"antonyms":[]},
+        {"word":"Permanganate","definition":"MnO₄⁻","example":"","synonyms":[],"antonyms":[]},
+        {"word":"Dichromate","definition":"Cr₂O₇²⁻","example":"","synonyms":[],"antonyms":[]},
+        {"word":"Chromate","definition":"CrO₄²⁻","example":"","synonyms":[],"antonyms":[]},
+        {"word":"Peroxide","definition":"O₂²⁻","example":"","synonyms":[],"antonyms":[]},
+        {"word":"Cyanide","definition":"CN⁻","example":"","synonyms":[],"antonyms":[]},
+        {"word":"Thiocyanate","definition":"SCN⁻","example":"","synonyms":[],"antonyms":[]},
+        {"word":"Oxalate","definition":"C₂O₄²⁻","example":"","synonyms":[],"antonyms":[]},
+        {"word":"Thiosulfate","definition":"S₂O₃²⁻","example":"","synonyms":[],"antonyms":[]},
+        {"word":"Bromate","definition":"BrO₃⁻","example":"","synonyms":[],"antonyms":[]},
+        {"word":"Iodate","definition":"IO₃⁻","example":"","synonyms":[],"antonyms":[]}
+      ]
     }
   ]
 }
