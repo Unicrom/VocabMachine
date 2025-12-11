@@ -145,7 +145,11 @@
             <aside class="study-config" id="study-config">
               <div class="config-block">
                 <label class="config-label">Lists</label>
-                <div class="list-chips selectable" id="study-list-chips" aria-label="Select lists to study" role="list"></div>
+                <button id="btn-add-study-lists" class="add-lists-btn" aria-label="Add Lists">
+                  <svg class="icon" aria-hidden="true"><use href="#icon-add"/></svg>
+                  <span>Add Lists</span>
+                </button>
+                <div id="selected-study-lists" class="selected-study-lists"></div>
               </div>
               <div class="config-block">
                 <label class="config-label">Content Type</label>
@@ -187,6 +191,20 @@
     <footer class="app-footer">
       <small>Made for personal study • Data stays on this device</small>
     </footer>
+
+    <!-- Add Lists Modal -->
+    <div id="add-lists-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="add-lists-modal-title">
+      <div class="modal">
+        <div class="modal-header">
+          <h3 id="add-lists-modal-title">Add Lists to Study Session</h3>
+          <button id="btn-close-add-lists" class="icon-btn" aria-label="Close"><svg class="icon" aria-hidden="true"><use href="#icon-close"/></svg></button>
+        </div>
+        <div class="modal-body">
+          <input id="add-lists-search" type="search" placeholder="Search lists by name or tags..." />
+          <div id="add-lists-container" class="add-lists-container"></div>
+        </div>
+      </div>
+    </div>
 
     <!-- Word Modal -->
     <div id="word-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="word-modal-title">

@@ -3,6 +3,7 @@
   "lists": [
     {
       "name": "List 1",
+      "tags": ["AP Lang"],
       "words": [
         {"word":"acquisitive","definition":"able to get and retain ideas or information; concerned with acquiring wealth or property","example":"In an acquisitive society, there is a great deal of emphasis on buying and selling.","synonyms":["greedy","grasping","avaricious","retentive"],"antonyms":["altruistic","unretentive"]},
         {"word":"arrogate","definition":"to claim or take without right","example":"The ambitious noblemen will arrogate royal privileges to themselves.","synonyms":["expropriate","usurp","commandeer"],"antonyms":["relinquish","renounce","abdicate","abandon"]},
@@ -28,6 +29,7 @@
     },
     {
       "name": "List 2",
+      "tags": ["AP Lang"],
       "words": [
         {"word":"accost","definition":"to approach and speak to first; to confront in a challenging or aggressive way","example":"The nobleman was accosted by beggars on his way to the castle.","synonyms":["buttonhole","approach","confront"],"antonyms":["evade","avoid","shun"]},
         {"word":"animadversion","definition":"a comment indicating strong criticism or disapproval","example":"The inexperienced filmmaker was disheartened by the animadversion of the film critic.","synonyms":["rebuke","reproof"],"antonyms":["praise","compliment"]},
@@ -53,6 +55,7 @@
     },
     {
       "name": "List 3",
+      "tags": ["AP Lang"],
       "words": [
         {"word":"articulate","definition":"to pronounce distinctly; to express well in words; to connect by a joint or joints; expressed clearly and forcefully; able to employ language clearly and forcefully; jointed","example":"Few people can articulate their emotions during times of stress.","synonyms":["pronounce","elucidate","eloquent"],"antonyms":["mumble","slur","tongue-tied","halting"]},
         {"word":"cavort","definition":"to romp or prance around exuberantly; to make merry","example":"The actors in the musical cavort on stage.","synonyms":["gambol"],"antonyms":[]},
@@ -78,6 +81,7 @@
     },
     {
       "name": "List 4",
+      "tags": ["AP Lang"],
       "words": [
         {"word":"atrophy","definition":"the wasting away of a body organ or tissue; any progressive decline or failure; to waste away","example":"Without regular exercise, muscles will atrophy.","synonyms":["deterioration","decline","degeneration"],"antonyms":["growth","development","strengthening"]},
         {"word":"bastion","definition":"a fortified place, stronghold; a strong position or supporter","example":"The university was considered a bastion of political conservatism.","synonyms":["fortress","stronghold","citadel"],"antonyms":[]},
@@ -103,6 +107,7 @@
     },
     {
       "name": "List 5",
+      "tags": ["AP Lang"],
       "words": [
         {"word":"acuity","definition":"sharpness, particularly of the mind or senses","example":"","synonyms":["keenness","acuteness"],"antonyms":["dullness","obtuseness"]},
         {"word":"delineate","definition":"to portray, sketch, or describe in accurate and vivid detail; to represent pictorially","example":"","synonyms":["depict","picture","render"],"antonyms":[]},
@@ -128,6 +133,7 @@
     },
     {
       "name": "List 6",
+      "tags": ["AP Lang"],
       "words": [
         {"word":"abject","definition":"degraded; base, contemptible; cringing, servile; complete and unrelieved","example":"","synonyms":["wretched","miserable","ignoble","sordid","utter"],"antonyms":["lofty","noble","exalted"]},
         {"word":"agnostic","definition":"one who believes that nothing can be known about God; a skeptic; without faith, skeptical","example":"","synonyms":["doubter"],"antonyms":["believer"]},
@@ -153,6 +159,7 @@
     },
     {
       "name": "List 7",
+      "tags": ["AP Lang"],
       "words": [
         {"word":"allay","definition":"to calm or pacify, set to rest; to lessen or relieve","example":"","synonyms":["reduce","alleviate","moderate"],"antonyms":["aggravate","exacerbate","intensify"]},
         {"word":"bestial","definition":"beastlike; beastly, brutal; subhuman in intelligence and sensibility","example":"","synonyms":["animal","depraved","loathsome"],"antonyms":["human","humane","clement","virtuous","upright"]},
@@ -178,6 +185,7 @@
     },
     {
       "name": "List 8",
+      "tags": ["AP Lang"],
       "words": [
         {"word":"allege","definition":"to assert without proof or confirmation","example":"The newspaper tabloid alleged that the movie star and the director were having creative differences.","synonyms":["claim","contend"],"antonyms":["prove","deny"]},
         {"word":"arrant","definition":"thoroughgoing, out-and-out; shameless, blatant","example":"In Shakespeare's tragedy the audience sees clearly that Iago is an arrant scoundrel.","synonyms":["egregious","unmitigated"],"antonyms":[]},
@@ -202,7 +210,8 @@
       ]
     },
     {
-      "name": "Periodic Table",
+      "name": "Elements",
+      "tags": ["Chemistry"],
       "words": [
         {"word":"Hydrogen","definition":"H","example":"","synonyms":[],"antonyms":[]},
         {"word":"Helium","definition":"He","example":"","synonyms":[],"antonyms":[]},

@@ -5,6 +5,7 @@ import { StudyEngine } from './study.js';
 const state = {
   lists: [],
   activeListId: null,
+  selectedStudyListIds: [], // IDs of lists selected for study session
   session: null,
   awaitingContinue: false,
   streak: 0,
@@ -81,7 +82,13 @@ function cacheEls() {
 
   // Study
   // Study setup (new)
-  els.studyListChips = $('#study-list-chips');
+  els.btnAddStudyLists = $('#btn-add-study-lists');
+  els.selectedStudyLists = $('#selected-study-lists');
+  els.addListsModal = $('#add-lists-modal');
+  els.btnCloseAddLists = $('#btn-close-add-lists');
+  els.btnCancelAddLists = $('#btn-cancel-add-lists');
+  els.addListsSearch = $('#add-lists-search');
+  els.addListsContainer = $('#add-lists-container');
   els.contentTabs = $all('.content-tab');
   els.btnStartStudy = $('#btn-start-study');
   // Floating settings
@@ -135,7 +142,7 @@ function wireTabs() {
         document.body.classList.add('in-study');
         // Persist any pending list changes & refresh chips when entering Study
         save();
-        renderStudyListChips();
+        renderSelectedStudyLists();
         // Update progress bar visibility (only when a test session is active)
         const pbWrap = document.getElementById('progress-bar-wrap');
         if (pbWrap) {
@@ -163,8 +170,8 @@ function wireListPanel() {
     state.activeListId = id;
     save();
     openListDetail(id);
-    // Immediately reflect in Study panel list chips
-    renderStudyListChips();
+    // Immediately reflect in Study panel
+    renderSelectedStudyLists();
   });
 
   els.btnDuplicateList.addEventListener('click', () => {
@@ -178,8 +185,8 @@ function wireListPanel() {
     state.activeListId = id;
     save();
     openListDetail(id);
-    // Refresh chips for new duplicate
-    renderStudyListChips();
+    // Refresh list selection for new duplicate
+    renderSelectedStudyLists();
   });
 
   els.btnDeleteList.addEventListener('click', async () => {
@@ -193,7 +200,7 @@ function wireListPanel() {
     // After delete go back to overview
     showOverview();
     renderLists();
-    renderStudyListChips();
+    renderSelectedStudyLists();
   });
 
   // Inline title rename: click list title (h2) to rename
@@ -207,7 +214,7 @@ function wireListPanel() {
         list.name = v;
         save();
         renderLists();
-        renderStudyListChips(); // keep chips in sync
+        renderSelectedStudyLists(); // keep list selection in sync
       }
     };
     els.detailTitle.addEventListener('blur', commit);
@@ -276,7 +283,7 @@ function wireListPanel() {
         });
         save();
         renderLists();
-        renderStudyListChips();
+        renderSelectedStudyLists();
         alert(`Import complete. New lists: ${added}, merged: ${merged}, words added: ${addedWords}.`);
       } catch (e) {
         alert('Import failed: ' + (e && e.message ? e.message : e));
@@ -376,13 +383,22 @@ function wireStudyPanel() {
     els.synAntPrompt.addEventListener('change', updateButtonForSettingsChange);
   }
   
-  // Listen for changes to study list selection
-  if (els.studyListChips) {
-    els.studyListChips.addEventListener('change', (e) => {
-      if (e.target.type === 'checkbox') {
-        updateButtonForSettingsChange();
-      }
-    });
+  // Add Lists button
+  if (els.btnAddStudyLists) {
+    els.btnAddStudyLists.addEventListener('click', openAddListsModal);
+  }
+  
+  // Close modal buttons
+  if (els.btnCloseAddLists) {
+    els.btnCloseAddLists.addEventListener('click', closeAddListsModal);
+  }
+  if (els.btnCancelAddLists) {
+    els.btnCancelAddLists.addEventListener('click', closeAddListsModal);
+  }
+  
+  // Search in add lists modal
+  if (els.addListsSearch) {
+    els.addListsSearch.addEventListener('input', renderAddListsModal);
   }
 
   // Collapse setup controls
@@ -444,12 +460,19 @@ async function loadBuiltInLists(mode = 'merge', manual = false) {
     for (const src of data.lists) {
       const existing = nameMap.get(src.name);
       if (!existing) {
-        state.lists.push({ id: crypto.randomUUID(), name: src.name, words: src.words || [], stats: {} });
+        state.lists.push({ id: crypto.randomUUID(), name: src.name, words: src.words || [], tags: src.tags || [], stats: {} });
         changed++;
       } else if (mode === 'overwrite') {
         existing.words = src.words || [];
+        existing.tags = src.tags || [];
         existing.stats = {};
         changed++;
+      } else if (mode === 'merge') {
+        // In merge mode, update tags if they don't exist
+        if (!existing.tags || existing.tags.length === 0) {
+          existing.tags = src.tags || [];
+          changed++;
+        }
       }
     }
     if (changed) {
@@ -458,7 +481,7 @@ async function loadBuiltInLists(mode = 'merge', manual = false) {
       }
       save();
       renderLists();
-      renderStudyListChips();
+      renderSelectedStudyLists();
     }
   } catch (e) {
     console.warn('Failed to load built-in lists', e);
@@ -472,7 +495,7 @@ function render() {
     renderListEditor();
     renderWords();
   }
-  renderStudyListChips();
+  renderSelectedStudyLists();
 }
 
 function renderLists() {
@@ -604,7 +627,7 @@ function handleCardMenu(list, act) {
         if (!ok) { closeOtherMenus(null); return; }
         state.lists = state.lists.filter(l => l.id !== list.id);
   if (state.activeListId === list.id) state.activeListId = (state.lists[0] ? state.lists[0].id : null);
-        save(); renderLists(); renderStudyListChips();
+        save(); renderLists(); renderSelectedStudyLists();
         closeOtherMenus(null);
       });
       break;
@@ -756,17 +779,113 @@ function renderWords() {
   updateDetailHeader();
 }
 
-function renderStudyListChips() {
-  els.studyListChips.innerHTML = '';
-  // Sort lists by name (case-insensitive) for consistent order
+function renderSelectedStudyLists() {
+  if (!els.selectedStudyLists) return;
+  els.selectedStudyLists.innerHTML = '';
+  
+  if (state.selectedStudyListIds.length === 0) {
+    els.selectedStudyLists.innerHTML = '<p class="no-lists-message">No lists selected. Click "Add Lists" to get started.</p>';
+    return;
+  }
+  
+  state.selectedStudyListIds.forEach(id => {
+    const list = state.lists.find(l => l.id === id);
+    if (!list) return;
+    
+    const item = document.createElement('div');
+    item.className = 'selected-list-item';
+    item.innerHTML = `
+      <div class="selected-list-info">
+        <span class="selected-list-name">${escapeHtml(list.name)}</span>
+      </div>
+      <button class="icon-btn small remove-list-btn" data-id="${list.id}" aria-label="Remove ${escapeHtml(list.name)}" title="Remove list">
+        <svg class="icon" aria-hidden="true"><use href="#icon-close"/></svg>
+      </button>
+    `;
+    
+    const removeBtn = item.querySelector('.remove-list-btn');
+    removeBtn.addEventListener('click', () => {
+      state.selectedStudyListIds = state.selectedStudyListIds.filter(i => i !== id);
+      renderSelectedStudyLists();
+      updateButtonForSettingsChange();
+    });
+    
+    els.selectedStudyLists.appendChild(item);
+  });
+}
+
+function openAddListsModal() {
+  if (!els.addListsModal) return;
+  els.addListsModal.classList.remove('hidden');
+  if (els.addListsSearch) els.addListsSearch.value = '';
+  renderAddListsModal();
+}
+
+function closeAddListsModal() {
+  if (!els.addListsModal) return;
+  els.addListsModal.classList.add('hidden');
+}
+
+function renderAddListsModal() {
+  if (!els.addListsContainer) return;
+  
+  const searchTerm = (els.addListsSearch ? els.addListsSearch.value : '').toLowerCase();
   const sorted = state.lists.slice().sort((a,b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
-  sorted.forEach(l => {
-    const id = `chip-${l.id}`;
-    const label = document.createElement('label');
-    label.className = 'chip';
-    label.setAttribute('role', 'listitem');
-    label.innerHTML = `<input type="checkbox" id="${id}" data-id="${l.id}" checked><span>${escapeHtml(l.name)} <small>(${l.words.length})</small></span>`;
-    els.studyListChips.appendChild(label);
+  
+  const filtered = sorted.filter(list => {
+    if (!searchTerm) return true;
+    
+    // Search by name
+    if (list.name.toLowerCase().includes(searchTerm)) return true;
+    
+    // Search by tags
+    if (list.tags && list.tags.some(tag => tag.toLowerCase().includes(searchTerm))) return true;
+    
+    return false;
+  });
+  
+  els.addListsContainer.innerHTML = '';
+  
+  if (filtered.length === 0) {
+    els.addListsContainer.innerHTML = '<p class="no-results-message">No lists found matching your search.</p>';
+    return;
+  }
+  
+  filtered.forEach(list => {
+    const isSelected = state.selectedStudyListIds.includes(list.id);
+    
+    const item = document.createElement('div');
+    item.className = 'add-list-item' + (isSelected ? ' selected' : '');
+    
+    // Ensure tags is always an array
+    const tags = Array.isArray(list.tags) ? list.tags : [];
+    const tagsHTML = tags.length > 0
+      ? tags.map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')
+      : '<span class="tag">uncategorized</span>';
+    
+    item.innerHTML = `
+      <div class="add-list-info">
+        <span class="add-list-name">${escapeHtml(list.name)}</span>
+        <span class="add-list-dot">•</span>
+        <span class="add-list-count">${list.words.length} words</span>
+      </div>
+      <div class="add-list-tags">
+        ${tagsHTML}
+      </div>
+    `;
+    
+    item.addEventListener('click', () => {
+      if (isSelected) {
+        state.selectedStudyListIds = state.selectedStudyListIds.filter(i => i !== list.id);
+      } else {
+        state.selectedStudyListIds.push(list.id);
+      }
+      renderAddListsModal();
+      renderSelectedStudyLists();
+      updateButtonForSettingsChange();
+    });
+    
+    els.addListsContainer.appendChild(item);
   });
 }
 
@@ -860,13 +979,17 @@ function deleteCurrentModalWord() {
 
 // Study session
 function startSession() {
-  const listIds = Array.from(els.studyListChips.querySelectorAll('input[type="checkbox"]:checked')).map(c => c.dataset.id);
-  const selectedLists = state.lists.filter(l => listIds.includes(l.id));
+  if (state.selectedStudyListIds.length === 0) {
+    alert('Please add at least one list to study.');
+    return;
+  }
+  
+  const selectedLists = state.lists.filter(l => state.selectedStudyListIds.includes(l.id));
   const allWords = selectedLists.flatMap(l => l.words.map(w => ({ ...w, __listId: l.id })));
   const pool = allWords;
   const content = currentContentType();
   if (!pool.length) {
-    alert('Select at least one list with words.');
+    alert('The selected lists have no words.');
     return;
   }
   const options = {

@@ -330,6 +330,213 @@ body:not(.study-config-collapsed) .collapse-toggle .collapse-icon-eye-off { opac
 .chip-stat.warn span { color: var(--warn); }
 .chip-stat.bad span { color: var(--danger); }
 
+/* Add Lists Button & Selected Lists Display */
+.add-lists-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 16px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: var(--fs-base);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.add-lists-btn:hover {
+  background: var(--primary-2);
+}
+.add-lists-btn .icon {
+  width: 18px;
+  height: 18px;
+}
+
+.selected-study-lists {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.no-lists-message {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  text-align: center;
+  padding: 20px 12px;
+  margin: 0;
+}
+
+.selected-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: border-color 0.2s;
+}
+.selected-list-item:hover {
+  border-color: var(--primary);
+}
+
+.selected-list-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.selected-list-name {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--text-strong);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selected-list-count {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+.remove-list-btn {
+  flex-shrink: 0;
+  padding: 4px;
+  transition: color 0.2s;
+}
+.remove-list-btn:hover {
+  color: var(--danger);
+}
+.remove-list-btn .icon {
+  width: 10px;
+  height: 10px;
+}
+
+/* Add Lists Modal */
+#add-lists-modal .modal {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+#add-lists-modal .modal-header {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 12px;
+}
+
+#add-lists-modal .modal-body {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+
+#add-lists-search {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.add-lists-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.no-results-message {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  text-align: center;
+  padding: 30px 12px;
+  margin: 0;
+}
+
+.add-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.add-list-item:hover {
+  border-color: var(--primary);
+  background: var(--card);
+}
+.add-list-item.selected {
+  border-color: var(--primary);
+  background: rgba(79, 70, 229, 0.08);
+}
+
+.add-list-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.add-list-name {
+  font-size: var(--fs-base);
+  font-weight: 500;
+  color: var(--text-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.add-list-count {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.add-list-dot {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  flex-shrink: 0;
+}
+
+.add-list-tags {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.tag {
+  display: inline-block;
+  padding: 4px 10px;
+  background: rgba(99, 102, 241, 0.2);
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  border-radius: 6px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+}
+
 @media (max-width: 1080px) {
   .study-layout { grid-template-columns: 1fr 250px; gap: 18px; }
 }
