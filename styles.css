@@ -26,7 +26,7 @@
 
 * { box-sizing: border-box; }
 html { font-size: 18px; }
-html, body { height: 100%; }
+html, body { height: 100%; overflow-x: hidden; }
 body {
   margin: 0;
   font: var(--fs-md)/1.5 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
@@ -55,9 +55,9 @@ body {
 }
 .tab.active, .tab:hover { border-color: var(--primary); color: var(--text-strong); }
 
-main { padding: 90px clamp(12px,3vw,32px) 20px; margin: 0 auto; flex: 1; width: 100%;}
-.panel { display: none; }
-.panel.active { display: block; }
+main { padding: 90px clamp(12px,3vw,32px) 20px; margin: 0 auto; flex: 1; width: 100%; overflow-x: hidden;}
+.panel { display: none; overflow-x: hidden; height: 100%; }
+.panel.active { display: flex; flex-direction: column; }
 .panel-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .panel-header h2 { margin: 8px 0 16px; }
 .actions button { margin-left: 8px; }
@@ -541,28 +541,117 @@ body:not(.study-config-collapsed) .collapse-toggle .collapse-icon-eye-off { opac
 .flashcard-layout {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 6px;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 6px 24px 0;
+  height: 100%;
+  width: 100%;
 }
 
 .flashcard-settings {
   display: flex;
   gap: 12px;
   align-items: center;
-  padding: 12px 0;
+  padding: 16px 20px;
   flex-wrap: wrap;
+  background: rgba(31, 41, 55, 0.3);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  justify-content: center;
 }
 
 .flashcard-settings select {
-  min-width: 180px;
+  min-width: 200px;
+  padding: 8px 12px;
+  font-size: var(--fs-base);
 }
 
 .flashcard-dot {
   color: var(--text-muted);
   font-size: var(--fs-lg);
   user-select: none;
+}
+
+.flashcard-cycle-btn {
+  padding: 8px 16px;
+  background: rgba(79, 70, 229, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: var(--fs-base);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.flashcard-cycle-btn:hover {
+  background: rgba(79, 70, 229, 0.25);
+  border-color: rgba(99, 102, 241, 0.5);
+  transform: translateY(-1px);
+}
+
+.flashcard-cycle-btn:active {
+  transform: translateY(0);
+}
+
+.flashcard-animations-btn {
+  padding: 8px 16px;
+  background: rgba(100, 116, 139, 0.15);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: var(--fs-base);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.flashcard-animations-btn:hover {
+  background: rgba(100, 116, 139, 0.25);
+  border-color: rgba(148, 163, 184, 0.5);
+}
+
+.flashcard-animations-btn.active {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.flashcard-animations-btn.active:hover {
+  background: rgba(34, 197, 94, 0.25);
+  border-color: rgba(34, 197, 94, 0.6);
+}
+
+.animations-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(148, 163, 184, 0.5);
+  transition: all 0.2s;
+}
+
+.flashcard-animations-btn.active .animations-indicator {
+  background: #22c55e;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+}
+
+.flashcard-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  font-size: var(--fs-base);
+  color: var(--text);
+}
+
+.flashcard-toggle input[type="checkbox"] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
 }
 
 .flashcard-main {
@@ -595,7 +684,9 @@ body:not(.study-config-collapsed) .collapse-toggle .collapse-icon-eye-off { opac
   gap: 0;
   align-items: center;
   flex: 1;
-  padding-bottom: 80px;
+  padding-bottom: 0;
+  overflow-x: hidden;
+  overflow-y: hidden;
 }
 
 .flashcard-container {
@@ -603,8 +694,9 @@ body:not(.study-config-collapsed) .collapse-toggle .collapse-icon-eye-off { opac
   max-width: 800px;
   flex: 1;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+  overflow-x:visible;
 }
 
 .flashcard {
@@ -621,7 +713,64 @@ body:not(.study-config-collapsed) .collapse-toggle .collapse-icon-eye-off { opac
   text-align: center;
   box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.4), 0 4px 12px -2px rgba(0, 0, 0, 0.3);
   cursor: pointer;
-  transition: box-shadow 0.2s;
+  transition: box-shadow 0.2s, transform 0.3s ease, opacity 0.15s ease;
+}
+
+.flashcard.flipping {
+  transform: scale(0.95);
+  opacity: 0.7;
+}
+
+.flashcard.swipe-out-left {
+  animation: swipeOutLeft 0.3s ease-out forwards;
+}
+
+.flashcard.swipe-out-right {
+  animation: swipeOutRight 0.3s ease-out forwards;
+}
+
+.flashcard.swipe-in-left {
+  animation: swipeInLeft 0.3s ease-out forwards;
+}
+
+.flashcard.swipe-in-right {
+  animation: swipeInRight 0.3s ease-out forwards;
+}
+
+@keyframes swipeOutLeft {
+  to {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+@keyframes swipeOutRight {
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes swipeInLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes swipeInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 .flashcard-label {
@@ -629,11 +778,6 @@ body:not(.study-config-collapsed) .collapse-toggle .collapse-icon-eye-off { opac
   top: 16px;
   left: 20px;
   font-size: var(--fs-sm);
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -713,7 +857,9 @@ body:not(.study-config-collapsed) .collapse-toggle .collapse-icon-eye-off { opac
   .stat-chips { justify-content: flex-start; overflow-x: auto; }
   
   .flashcard { min-height: 300px; padding: 30px; }
-  .flashcard-settings { flex-direction: column; align-items: stretch; }
+  .flashcard-settings { flex-direction: column; align-items: stretch; gap: 10px; }
   .flashcard-settings select { min-width: auto; width: 100%; }
+  .flashcard-cycle-btn { width: 100%; }
+  .flashcard-animations-btn { width: 100%; justify-content: center; }
   .flashcard-dot { display: none; }
 }

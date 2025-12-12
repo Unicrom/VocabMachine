@@ -195,15 +195,18 @@
               <option value="">Choose a list...</option>
             </select>
             <span class="flashcard-dot">•</span>
-            <select id="flashcard-direction" class="full-select">
-              <option value="word-to-definition">Word → Definition</option>
-              <option value="definition-to-word">Definition → Word</option>
-            </select>
+            <button id="flashcard-direction" class="flashcard-cycle-btn" data-value="word-to-definition">
+              Word → Definition
+            </button>
             <span class="flashcard-dot">•</span>
-            <select id="flashcard-order" class="full-select">
-              <option value="sequential">Sequential</option>
-              <option value="random">Random</option>
-            </select>
+            <button id="flashcard-order" class="flashcard-cycle-btn" data-value="sequential">
+              Sequential
+            </button>
+            <span class="flashcard-dot">•</span>
+            <button id="flashcard-animations-btn" class="flashcard-animations-btn active">
+              <span class="animations-indicator"></span>
+              <span>Animations</span>
+            </button>
           </div>
           
           <div class="flashcard-main">
@@ -240,10 +243,6 @@
       </section>
 
     </main>
-
-    <footer class="app-footer">
-      <small>Made for personal study • Data stays on this device</small>
-    </footer>
 
     <!-- Add Lists Modal -->
     <div id="add-lists-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="add-lists-modal-title">
