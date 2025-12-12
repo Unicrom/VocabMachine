@@ -32,6 +32,7 @@
       <nav class="tabs" role="tablist" aria-label="Primary">
         <button class="tab active" data-tab="lists" role="tab" aria-selected="true">Lists</button>
         <button class="tab" data-tab="study" role="tab" aria-selected="false">Study</button>
+        <button class="tab" data-tab="flashcards" role="tab" aria-selected="false">Flashcards</button>
       </nav>
     </header>
 
@@ -183,6 +184,58 @@
                 <button id="btn-end-session" class="danger start-btn hidden" aria-label="End Session">End</button>
               </div>
             </aside>
+        </div>
+      </section>
+
+      <!-- Flashcards Panel -->
+      <section id="panel-flashcards" class="panel" role="tabpanel" aria-labelledby="Flashcards">
+        <div class="flashcard-layout">
+          <div class="flashcard-settings">
+            <select id="flashcard-list-select" class="full-select">
+              <option value="">Choose a list...</option>
+            </select>
+            <span class="flashcard-dot">•</span>
+            <select id="flashcard-direction" class="full-select">
+              <option value="word-to-definition">Word → Definition</option>
+              <option value="definition-to-word">Definition → Word</option>
+            </select>
+            <span class="flashcard-dot">•</span>
+            <select id="flashcard-order" class="full-select">
+              <option value="sequential">Sequential</option>
+              <option value="random">Random</option>
+            </select>
+          </div>
+          
+          <div class="flashcard-main">
+            <div id="flashcard-placeholder" class="flashcard-placeholder">
+              <h3>Ready to review?</h3>
+              <p>Select a list from the sidebar to start viewing flashcards.</p>
+            </div>
+            
+            <div id="flashcard-viewer" class="flashcard-viewer hidden">
+              <div class="flashcard-container">
+                <div id="flashcard" class="flashcard">
+                  <span id="flashcard-label" class="flashcard-label">Word</span>
+                  <div id="flashcard-content" class="flashcard-content"></div>
+                </div>
+              </div>
+            </div>
+            
+            <div id="flashcard-controls-bottom" class="flashcard-controls-bottom hidden">
+              <div class="flashcard-controls-inner">
+                <button id="btn-prev-card" class="icon-btn" aria-label="Previous card" title="Previous card">
+                  <svg class="icon" aria-hidden="true"><use href="#icon-chevron-left"/></svg>
+                </button>
+                <div class="flashcard-center">
+                  <span id="flashcard-counter">1 / 10</span>
+                  <button id="btn-flip-card" class="primary">Flip Card</button>
+                </div>
+                <button id="btn-next-card" class="icon-btn" aria-label="Next card" title="Next card">
+                  <svg class="icon" aria-hidden="true" style="transform: rotate(180deg)"><use href="#icon-chevron-left"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

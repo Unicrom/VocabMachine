@@ -14,6 +14,13 @@ const state = {
   // Session restart tracking
   sessionStartSettings: null,
   settingsChanged: false,
+  // Flashcards state
+  flashcards: {
+    listId: null,
+    cards: [],
+    currentIndex: 0,
+    flipped: false,
+  },
 };
 
 const els = {};
@@ -33,6 +40,7 @@ function init() {
   wireTabs();
   wireListPanel();
   wireStudyPanel();
+  wireFlashcardsPanel();
   load();
   // Merge built-in default lists (non-destructive) asynchronously
   loadBuiltInLists('merge');
@@ -128,6 +136,21 @@ function cacheEls() {
   els.appDialogInput = $('#app-dialog-input');
   els.appDialogButtons = $('#app-dialog-buttons');
   els.appDialogClose = $('#app-dialog-close');
+  
+  // Flashcards
+  els.flashcardListSelect = $('#flashcard-list-select');
+  els.flashcardDirection = $('#flashcard-direction');
+  els.flashcardOrder = $('#flashcard-order');
+  els.flashcardPlaceholder = $('#flashcard-placeholder');
+  els.flashcardViewer = $('#flashcard-viewer');
+  els.flashcard = $('#flashcard');
+  els.flashcardContent = $('#flashcard-content');
+  els.flashcardLabel = $('#flashcard-label');
+  els.flashcardCounter = $('#flashcard-counter');
+  els.flashcardControlsBottom = $('#flashcard-controls-bottom');
+  els.btnPrevCard = $('#btn-prev-card');
+  els.btnNextCard = $('#btn-next-card');
+  els.btnFlipCard = $('#btn-flip-card');
 }
 
 function wireTabs() {
@@ -154,6 +177,11 @@ function wireTabs() {
             pbWrap.setAttribute('aria-hidden','true');
           }
         }
+      } else if (tab.dataset.tab === 'flashcards') {
+        document.body.classList.remove('in-study');
+        // Populate flashcard lists when entering flashcards tab
+        save();
+        populateFlashcardLists();
       } else {
         document.body.classList.remove('in-study');
       }
@@ -1605,5 +1633,178 @@ function appPrompt(title, message, defaultValue = '') {
   return openDialog({ title, body: `<p>${message}</p>`, mode: 'prompt', defaultValue });
 }
 
+// ===== FLASHCARDS =====
+function wireFlashcardsPanel() {
+  if (!els.flashcardListSelect) return;
+  
+  // Populate list dropdown
+  els.flashcardListSelect.addEventListener('change', () => {
+    const listId = els.flashcardListSelect.value;
+    if (listId) {
+      loadFlashcards(listId);
+    } else {
+      hideFlashcardViewer();
+    }
+  });
+  
+  // Direction change
+  if (els.flashcardDirection) {
+    els.flashcardDirection.addEventListener('change', () => {
+      if (state.flashcards.listId) {
+        state.flashcards.flipped = false;
+        renderFlashcard();
+      }
+    });
+  }
+  
+  // Order change
+  if (els.flashcardOrder) {
+    els.flashcardOrder.addEventListener('change', () => {
+      if (state.flashcards.listId) {
+        loadFlashcards(state.flashcards.listId);
+      }
+    });
+  }
+  
+  // Navigation
+  if (els.btnPrevCard) {
+    els.btnPrevCard.addEventListener('click', () => {
+      if (state.flashcards.currentIndex > 0) {
+        state.flashcards.currentIndex--;
+        state.flashcards.flipped = false;
+        renderFlashcard();
+      }
+    });
+  }
+  
+  if (els.btnNextCard) {
+    els.btnNextCard.addEventListener('click', () => {
+      if (state.flashcards.currentIndex < state.flashcards.cards.length - 1) {
+        state.flashcards.currentIndex++;
+        state.flashcards.flipped = false;
+        renderFlashcard();
+      }
+    });
+  }
+  
+  if (els.btnFlipCard) {
+    els.btnFlipCard.addEventListener('click', () => {
+      state.flashcards.flipped = !state.flashcards.flipped;
+      renderFlashcard();
+    });
+  }
+  
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    // Only handle in flashcards panel
+    const flashcardsPanel = document.getElementById('panel-flashcards');
+    if (!flashcardsPanel || !flashcardsPanel.classList.contains('active')) return;
+    if (!state.flashcards.listId) return;
+    
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      els.btnPrevCard.click();
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      els.btnNextCard.click();
+    } else if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      els.btnFlipCard.click();
+    }
+  });
+}
+
+function populateFlashcardLists() {
+  if (!els.flashcardListSelect) return;
+  
+  const currentValue = els.flashcardListSelect.value;
+  els.flashcardListSelect.innerHTML = '<option value="">Choose a list...</option>';
+  
+  const sorted = state.lists.slice().sort((a,b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+  sorted.forEach(list => {
+    const option = document.createElement('option');
+    option.value = list.id;
+    option.textContent = `${list.name} (${list.words.length} words)`;
+    els.flashcardListSelect.appendChild(option);
+  });
+  
+  // Restore selection if it still exists
+  if (currentValue && state.lists.find(l => l.id === currentValue)) {
+    els.flashcardListSelect.value = currentValue;
+  }
+}
+
+function loadFlashcards(listId) {
+  const list = state.lists.find(l => l.id === listId);
+  if (!list || !list.words.length) return;
+  
+  state.flashcards.listId = listId;
+  state.flashcards.cards = list.words.slice();
+  
+  // Apply ordering
+  const order = els.flashcardOrder ? els.flashcardOrder.value : 'sequential';
+  if (order === 'random') {
+    // Fisher-Yates shuffle
+    for (let i = state.flashcards.cards.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [state.flashcards.cards[i], state.flashcards.cards[j]] = [state.flashcards.cards[j], state.flashcards.cards[i]];
+    }
+  }
+  
+  state.flashcards.currentIndex = 0;
+  state.flashcards.flipped = false;
+  
+  showFlashcardViewer();
+  renderFlashcard();
+}
+
+function showFlashcardViewer() {
+  if (els.flashcardPlaceholder) els.flashcardPlaceholder.classList.add('hidden');
+  if (els.flashcardViewer) els.flashcardViewer.classList.remove('hidden');
+  if (els.flashcardControlsBottom) els.flashcardControlsBottom.classList.remove('hidden');
+}
+
+function hideFlashcardViewer() {
+  if (els.flashcardPlaceholder) els.flashcardPlaceholder.classList.remove('hidden');
+  if (els.flashcardViewer) els.flashcardViewer.classList.add('hidden');
+  if (els.flashcardControlsBottom) els.flashcardControlsBottom.classList.add('hidden');
+  state.flashcards.listId = null;
+  state.flashcards.cards = [];
+}
+
+function renderFlashcard() {
+  const card = state.flashcards.cards[state.flashcards.currentIndex];
+  if (!card) return;
+  
+  const direction = els.flashcardDirection ? els.flashcardDirection.value : 'word-to-definition';
+  
+  let front, back, frontLabel, backLabel;
+  if (direction === 'word-to-definition') {
+    front = card.word;
+    back = card.definition;
+    frontLabel = 'Word';
+    backLabel = 'Definition';
+  } else {
+    front = card.definition;
+    back = card.word;
+    frontLabel = 'Definition';
+    backLabel = 'Word';
+  }
+  
+  // Display either front or back based on flip state
+  els.flashcardContent.textContent = state.flashcards.flipped ? back : front;
+  els.flashcardLabel.textContent = state.flashcards.flipped ? backLabel : frontLabel;
+  
+  // Update counter
+  els.flashcardCounter.textContent = `${state.flashcards.currentIndex + 1} / ${state.flashcards.cards.length}`;
+  
+  // Update button states
+  if (els.btnPrevCard) {
+    els.btnPrevCard.disabled = state.flashcards.currentIndex === 0;
+  }
+  if (els.btnNextCard) {
+    els.btnNextCard.disabled = state.flashcards.currentIndex === state.flashcards.cards.length - 1;
+  }
+}
 
 document.addEventListener('DOMContentLoaded', init);
